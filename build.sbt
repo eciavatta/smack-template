@@ -2,9 +2,14 @@
 val akkaVersion = "2.5.0"
 
 // Managed dependencies
-val akkaActor  = "com.typesafe.akka" %% "akka-actor"  % akkaVersion
+val akkaActor = "com.typesafe.akka" %% "akka-actor"  % akkaVersion
+val akkaHttp = "com.typesafe.akka" %% "akka-http" % "10.1.3"
+val akkaStream = "com.typesafe.akka" %% "akka-stream" % "2.5.12"
+val alpakka = "com.typesafe.akka" %% "akka-stream-kafka" % "0.22"
+val sprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.3"
+
 val akkaRemote = "com.typesafe.akka" %% "akka-remote" % akkaVersion
-val scalatest  = "org.scalatest"     %% "scalatest"   % "3.0.0"     % "test"
+val scalatest = "org.scalatest"     %% "scalatest"   % "3.0.0"     % "test"
 
 lazy val scalacheck = "org.scalacheck" %% "scalacheck" % "1.14.0"
 
@@ -24,15 +29,21 @@ lazy val commonSettings = Seq(
 lazy val root = Project(
   id = "smack-template",
   base = file(".")
-).aggregate(backend)
+).aggregate(backend, model)
  .settings(commonSettings: _*)
  .settings(
     libraryDependencies ++= Seq(akkaActor, akkaRemote, scalatest)
   )
 
-lazy val backend = module("backend-rest")
+lazy val backend = module("backend")
+  .dependsOn(model)
   .settings(
-    libraryDependencies ++= Seq(akkaActor, akkaRemote, scalatest)
+    libraryDependencies ++= Seq(alpakka, akkaActor, akkaHttp, akkaStream, sprayJson, scalatest)
+  )
+
+lazy val model = module("model")
+  .settings(
+    libraryDependencies ++= Seq(scalatest)
   )
 
 
