@@ -1,3 +1,5 @@
+import sbtassembly.AssemblyKeys
+
 // Constants
 val akkaVersion = "2.5.0"
 
@@ -23,16 +25,22 @@ lazy val commonSettings = Seq(
   version := (version in ThisBuild).value,
   compileScalastyle := scalastyle.in(Compile).toTask("").value,
   (compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value,
-  scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint")
+  scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
+  test in assembly := {}
 )
 
 lazy val root = Project(
   id = "smack-template",
   base = file(".")
-).aggregate(backend, model)
- .settings(commonSettings: _*)
- .settings(
-    libraryDependencies ++= Seq(akkaActor, akkaRemote, scalatest)
+ ).enablePlugins(AssemblyPlugin)
+  .enablePlugins(DockerPlugin)
+  .dependsOn(backend, model)
+  .settings(commonSettings: _*)
+  .settings(dockerSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(akkaActor, akkaRemote, scalatest),
+    // mainClass in assembly := Some("smack.Main"),
+    assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
   )
 
 lazy val backend = module("backend")
@@ -46,6 +54,19 @@ lazy val model = module("model")
     libraryDependencies ++= Seq(scalatest)
   )
 
+lazy val dockerSettings = Seq(
+  docker := (docker dependsOn assembly).value,
+  imageNames in docker := Seq(ImageName(s"docker.do.eciavatta.it/${name.value}:latest")),
+  dockerfile in docker := {
+    val artifact = (AssemblyKeys.assemblyOutputPath in assembly).value
+    val artifactTargetPath = s"/app/${artifact.name}"
+    new sbtdocker.mutable.Dockerfile {
+      from("openjdk:8u171-jre-alpine")
+      copy(artifact, artifactTargetPath)
+      entryPoint("java", "-cp", artifactTargetPath)
+    }
+  }
+)
 
 // add scalastyle to test task
 // lazy val testScalastyle = taskKey[Unit]("testScalastyle")

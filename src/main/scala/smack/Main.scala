@@ -1,4 +1,4 @@
-package smack.backend
+package smack
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer

@@ -5,10 +5,10 @@ import akka.http.scaladsl.model.HttpRequest
 
 import scala.concurrent.Future
 
-trait Controller[I, O] {
-
-  def handle(instance: I)(implicit request: HttpRequest): Future[O]
-
+trait EmptyController {
   protected def system: ActorSystem
+}
 
+trait Controller[I, O] extends EmptyController {
+  def handle(instance: I)(implicit request: HttpRequest): Future[O]
 }

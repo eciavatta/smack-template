@@ -4,13 +4,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.typesafe.config.ConfigFactory
+import smack.backend.routes.HealthMessage
 import smack.model.{User, UserCreated}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat}
 
 trait ModelMarshalling extends DefaultJsonProtocol {
-
-  implicit val authorFormat: RootJsonFormat[User] = jsonFormat3(User)
-  implicit val authorCreationFormat: RootJsonFormat[UserCreated] = jsonFormat3(UserCreated)
 
   implicit object DateJsonFormat extends RootJsonFormat[Date] {
 
@@ -23,5 +21,10 @@ trait ModelMarshalling extends DefaultJsonProtocol {
       case _ => throw DeserializationException("Date deserialization error")
     }
   }
+
+  implicit val authorFormat: RootJsonFormat[User] = jsonFormat3(User)
+  implicit val authorCreationFormat: RootJsonFormat[UserCreated] = jsonFormat3(UserCreated)
+
+  implicit val healthFormat: RootJsonFormat[HealthMessage] = jsonFormat6(HealthMessage)
 
 }

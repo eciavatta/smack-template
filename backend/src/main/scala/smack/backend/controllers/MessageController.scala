@@ -9,7 +9,7 @@ import smack.model.{User, UserCreated}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UserController(implicit val system: ActorSystem) extends EmptyController with ModelMarshalling {
+class MessageController(implicit val system: ActorSystem) extends EmptyController with ModelMarshalling {
 
   private implicit val ec: ExecutionContext = system.dispatcher
   private var users = Set[User]()
