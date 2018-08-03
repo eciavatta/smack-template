@@ -1,6 +1,6 @@
-package smack.backend.validation
+package smack.frontend.validation
 
-import smack.backend.server.ValidationDirective.FieldRule
+import smack.frontend.server.ValidationDirective.FieldRule
 
 object StringLengthRule {
   def apply(fieldName: String, length: Int): FieldRule[String] = {

@@ -1,16 +1,18 @@
-package smack.backend.routes
+package smack.frontend.routes
 
 import java.net.InetAddress
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._ // important
+import akka.actor.ActorRef
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import smack.backend.marshallers.ModelMarshalling
-import smack.backend.server.RestRoute
+import akka.util.Timeout
+import smack.frontend.marshallers.ModelMarshalling
+import smack.frontend.server.RestRoute
 
-class HealthRoute(implicit val actorSystem: ActorSystem) extends RestRoute with ModelMarshalling {
+class HealthRoute(implicit val backendRouter: ActorRef,
+                  implicit val requestTimeout: Timeout) extends RestRoute with ModelMarshalling {
 
   override protected def internalRoute(implicit request: HttpRequest): Route =
     pathPrefix("health") {

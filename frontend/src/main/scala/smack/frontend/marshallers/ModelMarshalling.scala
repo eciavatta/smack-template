@@ -1,10 +1,10 @@
-package smack.backend.marshallers
+package smack.frontend.marshallers
 
 import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.typesafe.config.ConfigFactory
-import smack.backend.routes.HealthMessage
+import smack.frontend.routes.HealthMessage
 import smack.model.{User, UserCreated}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat}
 

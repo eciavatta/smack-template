@@ -1,4 +1,4 @@
-package smack.backend.server
+package smack.frontend.server
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.Directives._
