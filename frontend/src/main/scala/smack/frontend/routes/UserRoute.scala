@@ -1,8 +1,8 @@
 package smack.frontend.routes
 
-import akka.actor.ActorRef
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
-import akka.http.scaladsl.model.HttpRequest
+import akka.http.scaladsl.model.{HttpRequest, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
@@ -12,8 +12,10 @@ import smack.frontend.server.ValidationDirective._
 import smack.frontend.validation._
 import smack.model._
 
-class UserRoute(implicit val backendRouter: ActorRef,
-                implicit val requestTimeout: Timeout) extends RestRoute with ModelMarshalling {
+import scala.util.{Failure, Success}
+
+class UserRoute(val backendRouter: ActorRef)
+               (implicit val requestTimeout: Timeout) extends RestRoute with ModelMarshalling {
 
   private val minUsernameLength = 6
 
@@ -32,5 +34,11 @@ class UserRoute(implicit val backendRouter: ActorRef,
           }
       }
     }
+}
+
+class ActorTest extends Actor with ActorLogging {
+  override def receive: Receive = {
+    case a: Any => log.info(a.toString)
+  }
 }
 

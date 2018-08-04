@@ -1,12 +1,13 @@
 package smack.backend
 
-import akka.actor.Actor
-import smack.model.GetUsersRequest
+import akka.actor.{Actor, ActorLogging, DeadLetter}
+import smack.model.{GetUsersRequest, GetUsersResponse}
 
-class Backend extends Actor {
+class Backend extends Actor with ActorLogging {
 
   override def receive: Receive = {
-    case GetUsersRequest => List()
+    case GetUsersRequest => sender ! GetUsersResponse(List())
+    case d: DeadLetter => log.info(d.toString)
   }
 
 }

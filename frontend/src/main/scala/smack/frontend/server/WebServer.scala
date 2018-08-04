@@ -6,6 +6,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
+import akka.routing.FromConfig
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.typesafe.config.Config
@@ -29,7 +30,7 @@ class WebServer(private val system: ActorSystem, private val config: Config) {
 
   private implicit val requestTimeout: Timeout = requestTimeout(config)
 
-  private implicit val frontendRouter: ActorRef = system.actorOf(Props.empty, name = "workerRouter")
+  private implicit val backendRouter: ActorRef = system.actorOf(FromConfig.props(Props.empty), name = "backendRouter")
 
   private implicit def myRejectionHandler: RejectionHandler = RejectionHandler.newBuilder()
     .handle {

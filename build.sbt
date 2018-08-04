@@ -1,3 +1,4 @@
+import sbt.Keys.libraryDependencies
 import sbtassembly.AssemblyKeys
 
 // Constants
@@ -27,7 +28,8 @@ lazy val commonSettings = Seq(
   scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
   test in assembly := {},
   conflictManager in ThisBuild := ConflictManager.all,
-  updateOptions := updateOptions.value.withCachedResolution(true)
+  updateOptions := updateOptions.value.withCachedResolution(true),
+  libraryDependencies ++= Seq(akkaActor, akkaRemote, akkaCluster),
 
 )
 lazy val root = Project(
@@ -39,7 +41,7 @@ lazy val root = Project(
   .settings(commonSettings: _*)
   .settings(dockerSettings: _*)
   .settings(
-    libraryDependencies ++= Seq(akkaActor, akkaRemote, scalatest, akkaZookeeper),
+    libraryDependencies ++= Seq(scalatest, akkaZookeeper),
     // mainClass in assembly := Some("smack.Main"),
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
   )
@@ -47,7 +49,7 @@ lazy val root = Project(
 lazy val frontend = module("frontend")
   .dependsOn(model)
   .settings(
-    libraryDependencies ++= Seq(alpakka, akkaActor, akkaHttp, akkaStream, sprayJson, scalatest)
+    libraryDependencies ++= Seq(akkaHttp, akkaStream, sprayJson, scalatest)
   )
 lazy val model = module("model")
   .settings(
@@ -56,7 +58,7 @@ lazy val model = module("model")
 lazy val cluster = module("cluster")
   .dependsOn(model)
   .settings(
-    libraryDependencies ++= Seq(akkaActor, scalatest)
+    libraryDependencies ++= Seq(scalatest)
   )
 lazy val dockerSettings = Seq(
   docker := (docker dependsOn assembly).value,
@@ -82,3 +84,9 @@ lazy val dockerSettings = Seq(
 def module(name: String): Project =
   Project(id = name, base = file(name))
     .settings(commonSettings)
+
+libraryDependencies ++= Seq(
+  // "org.apache.zookeeper" % "zookeeper" % "3.4.13"
+  "io.netty" % "netty" % "3.7.0.Final"
+
+)

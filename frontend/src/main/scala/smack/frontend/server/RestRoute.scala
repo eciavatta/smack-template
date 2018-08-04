@@ -25,7 +25,7 @@ abstract class RestRoute {
   protected def internalRoute(implicit request: HttpRequest): Route
 
   protected def makeResponse[M, N: ClassTag](request: M, response: N => ToResponseMarshallable): Route =
-    onComplete(backendRouter.ask(request).mapTo[N]) {
+    onComplete(backendRouter.ask(request)(requestTimeout, backendRouter).mapTo[N]) {
       case Success(m) => complete(response(m))
       case Failure(e) => complete((StatusCodes.ServiceUnavailable, e.getMessage))
     }
