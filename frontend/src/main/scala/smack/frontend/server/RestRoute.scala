@@ -30,4 +30,6 @@ abstract class RestRoute {
       case Failure(e) => complete((StatusCodes.ServiceUnavailable, e.getMessage))
     }
 
+  protected def notImplemented: Route = complete(StatusCodes.NotImplemented)
+
 }

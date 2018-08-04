@@ -1,3 +1,5 @@
+logLevel := Level.Warn
+
 // Examines your Scala code and indicates potential problems with it
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
 
@@ -9,3 +11,6 @@ addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.5.0")
 
 // Deploy fat JARs. Restart processes.
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.7")
+
+// Informative Scala compiler errors
+// addSbtPlugin("com.softwaremill.clippy" % "plugin-sbt" % "0.5.3")

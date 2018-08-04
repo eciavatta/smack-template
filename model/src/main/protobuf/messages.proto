@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+// Brought in from scalapb-runtime
+import "scalapb/scalapb.proto";
+import "google/protobuf/wrappers.proto";
+
+package smack.models;
+
+message GetUsersRequest {
+  option (scalapb.message).extends = "smack.serialization.ModelSerializer.RequestMessage";
+}
+
+message GetUsersResponse {
+  option (scalapb.message).extends = "smack.serialization.ModelSerializer.ResponseMessage";
+  string users = 1;
+}

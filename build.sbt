@@ -16,6 +16,9 @@ lazy val scalacheck = "org.scalacheck" %% "scalacheck" % "1.14.0"
 lazy val scalatest = "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 lazy val sprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion
 lazy val akkaZookeeper = "com.sclasen" %% "akka-zk-cluster-seed" % "0.1.10"
+lazy val scalaPB = "com.trueaccord.scalapb" %% "scalapb-runtime" % "0.6.7" % "protobuf"
+
+
 
 // add scalastyle to compile task
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
@@ -29,9 +32,13 @@ lazy val commonSettings = Seq(
   test in assembly := {},
   conflictManager in ThisBuild := ConflictManager.all,
   updateOptions := updateOptions.value.withCachedResolution(true),
-  libraryDependencies ++= Seq(akkaActor, akkaRemote, akkaCluster),
+  libraryDependencies ++= Seq(akkaActor, akkaRemote, akkaCluster, scalaPB),
 
+  PB.targets in Compile := Seq(
+    scalapb.gen() -> (sourceManaged in Compile).value
+  )
 )
+
 lazy val root = Project(
   id = "smack-template",
   base = file(".")
@@ -42,24 +49,28 @@ lazy val root = Project(
   .settings(dockerSettings: _*)
   .settings(
     libraryDependencies ++= Seq(scalatest, akkaZookeeper),
-    // mainClass in assembly := Some("smack.Main"),
+    // mainClass in assembly := Some("smack.RunFrontend"),
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
   )
+
 // (scalastyleConfig in Compile) := baseDirectory.value /  "project/scalastyle-config.xml"
 lazy val frontend = module("frontend")
   .dependsOn(model)
   .settings(
     libraryDependencies ++= Seq(akkaHttp, akkaStream, sprayJson, scalatest)
   )
+
 lazy val model = module("model")
   .settings(
     libraryDependencies ++= Seq(scalatest)
   )
+
 lazy val cluster = module("cluster")
   .dependsOn(model)
   .settings(
     libraryDependencies ++= Seq(scalatest)
   )
+
 lazy val dockerSettings = Seq(
   docker := (docker dependsOn assembly).value,
   imageNames in docker := Seq(ImageName(s"${name.value}:latest")),
@@ -74,7 +85,6 @@ lazy val dockerSettings = Seq(
   }
 )
 
-
 // add scalastyle to test task
 // lazy val testScalastyle = taskKey[Unit]("testScalastyle")
 // testScalastyle := scalastyle.in(Test).toTask("").value
@@ -86,7 +96,7 @@ def module(name: String): Project =
     .settings(commonSettings)
 
 libraryDependencies ++= Seq(
-  // "org.apache.zookeeper" % "zookeeper" % "3.4.13"
   "io.netty" % "netty" % "3.7.0.Final"
-
 )
+
+parallelExecution in Test := false

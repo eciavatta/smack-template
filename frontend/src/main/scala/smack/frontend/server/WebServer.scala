@@ -3,7 +3,7 @@ package smack.frontend.server
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.Logging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.routing.FromConfig
@@ -13,7 +13,7 @@ import com.typesafe.config.Config
 import smack.frontend.routes.RegisteredRoutes
 import smack.frontend.server.ValidationDirective._
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.{Duration, FiniteDuration, _}
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
 

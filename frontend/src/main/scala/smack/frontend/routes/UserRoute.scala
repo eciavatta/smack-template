@@ -1,18 +1,16 @@
 package smack.frontend.routes
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
-import akka.http.scaladsl.marshalling.ToResponseMarshallable
-import akka.http.scaladsl.model.{HttpRequest, StatusCodes}
+import akka.actor.ActorRef
+import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import smack.frontend.marshallers.ModelMarshalling
 import smack.frontend.server.RestRoute
 import smack.frontend.server.ValidationDirective._
-import smack.frontend.validation._
-import smack.model._
-
-import scala.util.{Failure, Success}
+import smack.frontend.validation.ValidationRules._
+import smack.models.Tweeters._
+import smack.models.messages._
 
 class UserRoute(val backendRouter: ActorRef)
                (implicit val requestTimeout: Timeout) extends RestRoute with ModelMarshalling {
@@ -23,22 +21,14 @@ class UserRoute(val backendRouter: ActorRef)
     pathPrefix("users") {
       pathEndOrSingleSlash {
         get {
-          makeResponse(GetUsersRequest, (g: GetUsersResponse) => g.users)
-        } ~
-          post {
-            entity(as[UserCreated]) { user =>
-              validateModel(user, EmailRule("email"), StringLengthRule("username", minUsernameLength)) { validatedUser =>
-                makeResponse(AddUserRequest(validatedUser), (g: AddUserResponse) => g.message.getOrElse("OK").asInstanceOf[ToResponseMarshallable])
-              }
+          makeResponse(GetUsersRequest(), (g: GetUsersResponse) => g.users)
+        } ~ post {
+          entity(as[UserCreated]) { user =>
+            validateModel(user, EmailRule("email"), StringLengthRule("username", minUsernameLength)) {
+              _ => notImplemented
             }
           }
+        }
       }
     }
 }
-
-class ActorTest extends Actor with ActorLogging {
-  override def receive: Receive = {
-    case a: Any => log.info(a.toString)
-  }
-}
-

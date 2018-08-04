@@ -5,7 +5,7 @@ import java.util.Date
 
 import com.typesafe.config.ConfigFactory
 import smack.frontend.routes.HealthMessage
-import smack.model.{User, UserCreated}
+import smack.models.Tweeters._
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat}
 
 trait ModelMarshalling extends DefaultJsonProtocol {
