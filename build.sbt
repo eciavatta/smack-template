@@ -65,7 +65,7 @@ lazy val cluster = module("cluster")
   .dependsOn(model)
 
 lazy val packSettings = Seq(
-  packMain := Map("launcher" -> "smack.Main")
+  packMain := Map("smack-template" -> "smack.Main")
 )
 
 lazy val dockerSettings = Seq(
@@ -76,7 +76,7 @@ lazy val dockerSettings = Seq(
     new sbtdocker.mutable.Dockerfile {
       from("java8:latest")
       copy(file("target/pack/"), outputPath)
-      entryPoint(s"${outputPath}bin/launcher")
+      entryPoint(s"${outputPath}bin/smack-template")
     }
   }
 )

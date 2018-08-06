@@ -36,6 +36,7 @@ object Main {
 
   def getConfigFile(role: String): String = role match {
     case "frontend" => "frontend"
+    case "backend" => "backend"
     case _ => "application"
   }
 
