@@ -2,15 +2,50 @@ syntax = "proto3";
 
 // Brought in from scalapb-runtime
 import "scalapb/scalapb.proto";
-import "google/protobuf/wrappers.proto";
+import "structures.proto";
 
 package smack.models;
 
 message GetUsersRequest {
-  option (scalapb.message).extends = "smack.serialization.ModelSerializer.RequestMessage";
+  option (scalapb.message).extends = "smack.serialization.MessageSerializer.RequestMessage";
 }
 
 message GetUsersResponse {
-  option (scalapb.message).extends = "smack.serialization.ModelSerializer.ResponseMessage";
-  string users = 1;
+  option (scalapb.message).extends = "smack.serialization.MessageSerializer.ResponseMessage";
+  int32 statusCode = 1;
+  repeated User users = 2;
+}
+
+message GetUserRequest {
+    option (scalapb.message).extends = "smack.serialization.MessageSerializer.RequestMessage";
+    int64 id = 1;
+}
+
+message GetUserResponse {
+    option (scalapb.message).extends = "smack.serialization.MessageSerializer.ResponseMessage";
+    int32 statusCode = 1;
+    User user = 2;
+}
+
+message CreateUserRequest {
+  option (scalapb.message).extends = "smack.serialization.MessageSerializer.RequestMessage";
+  string email = 1;
+  string username = 2;
+  string password = 3;
+}
+
+message CreateUserResponse {
+  option (scalapb.message).extends = "smack.serialization.MessageSerializer.ResponseMessage";
+  int32 statusCode = 1;
+  User user = 2;
+}
+
+message DeleteUserRequest {
+    option (scalapb.message).extends = "smack.serialization.MessageSerializer.RequestMessage";
+    int64 id = 1;
+}
+
+message DeleteUserResponse {
+    option (scalapb.message).extends = "smack.serialization.MessageSerializer.ResponseMessage";
+    int32 statusCode = 1;
 }

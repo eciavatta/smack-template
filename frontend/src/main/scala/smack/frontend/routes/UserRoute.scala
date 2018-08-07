@@ -9,8 +9,8 @@ import smack.frontend.marshallers.ModelMarshalling
 import smack.frontend.server.RestRoute
 import smack.frontend.server.ValidationDirective._
 import smack.frontend.validation.ValidationRules._
-import smack.models.Tweeters._
 import smack.models.messages._
+import smack.models.structures.User
 
 class UserRoute(val backendRouter: ActorRef)
                (implicit val requestTimeout: Timeout) extends RestRoute with ModelMarshalling {
@@ -21,14 +21,24 @@ class UserRoute(val backendRouter: ActorRef)
     pathPrefix("users") {
       pathEndOrSingleSlash {
         get {
-          makeResponse(GetUsersRequest(), (g: GetUsersResponse) => g.users)
-        } ~ post {
-          entity(as[UserCreated]) { user =>
-            validateModel(user, EmailRule("email"), StringLengthRule("username", minUsernameLength)) {
-              _ => notImplemented
+          handle(GetUsersRequest(), (g: GetUsersResponse) => Some(g.users))
+        } ~
+          post {
+            entity(as[CreateUserRequest]) { user =>
+              validateModel(user, EmailRule("email"), StringLengthRule("username", minUsernameLength)) {
+                req => handle(req, (r: CreateUserResponse) => r.user)
+              }
             }
           }
-        }
+      }
+    } ~ pathPrefix("users" / LongNumber) { id =>
+      pathEndOrSingleSlash {
+        get {
+          handle(GetUserRequest(id), (g: GetUserResponse) => g.user)
+        } ~
+          delete {
+            handle(DeleteUserRequest(id), (_: DeleteUserResponse) => Option.empty[User])
+          }
       }
     }
 }

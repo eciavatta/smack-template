@@ -14,7 +14,7 @@ lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
 lazy val akkaZookeeper = "com.sclasen" %% "akka-zk-cluster-seed" % "0.1.10"
 lazy val alpakka = "com.typesafe.akka" %% "akka-stream-kafka" % "0.22"
 lazy val scalacheck = "org.scalacheck" %% "scalacheck" % "1.14.0"
-lazy val scalaPB = "com.trueaccord.scalapb" %% "scalapb-runtime" % "0.6.7" % "protobuf"
+lazy val scalaPB = "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
 lazy val scalatest = "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 lazy val sprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion
 lazy val sentry = "io.sentry" % "sentry" % "1.7.5"
@@ -25,7 +25,7 @@ lazy val commonSettings = Seq(
   (compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value,
   compileScalastyle := scalastyle.in(Compile).toTask("").value,
   conflictManager in ThisBuild := ConflictManager.all,
-  libraryDependencies ++= Seq(akkaActor, akkaRemote, akkaCluster, scalatest),
+  libraryDependencies ++= Seq(akkaActor, akkaRemote, akkaCluster, scalatest, scalaPB),
   organization := "it.eciavatta",
   parallelExecution in Test := false,
   scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
@@ -35,20 +35,20 @@ lazy val commonSettings = Seq(
 
   PB.targets in Compile := Seq(
     scalapb.gen() -> (sourceManaged in Compile).value
-  )
+  ),
+  PB.includePaths in Compile += file("model/src/main/protobuf")
 )
 
 lazy val root = Project(
   id = "smack-template",
   base = file(".")
 ).enablePlugins(PackPlugin)
-  .enablePlugins(DockerPlugin)
   .enablePlugins(BuildInfoPlugin)
+  .enablePlugins(DockerPlugin)
   .dependsOn(frontend, cluster, model)
   .settings(commonSettings: _*)
   .settings(packSettings: _*)
   .settings(dockerSettings: _*)
-  .settings(buildInfoSettings: _*)
   .settings(
     libraryDependencies ++= Seq(scalatest, akkaZookeeper, sentry)
   )
@@ -89,6 +89,8 @@ lazy val buildInfoSettings = Seq(
 def module(name: String): Project =
   Project(id = name, base = file(name))
     .settings(commonSettings)
+    .settings(buildInfoSettings: _*)
+    .enablePlugins(BuildInfoPlugin)
 
 libraryDependencies ++= Seq(
   "io.netty" % "netty" % "3.7.0.Final",

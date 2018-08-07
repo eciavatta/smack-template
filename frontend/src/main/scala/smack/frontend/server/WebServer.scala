@@ -3,9 +3,11 @@ package smack.frontend.server
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.Logging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
+import akka.pattern.AskTimeoutException
 import akka.routing.FromConfig
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
@@ -24,12 +26,11 @@ class WebServer(private val system: ActorSystem, private val config: Config) {
   private implicit val ec: ExecutionContext = system.dispatcher
 
   private val logger = Logging(system, config.getString("name"))
-  var host: String = config.getString("http.host")
-  var port: Int = config.getInt("http.port")
+  private val host: String = config.getString("akka.http.server.host")
+  private val port: Int = config.getInt("akka.http.server.port")
   private var binding: Future[Http.ServerBinding] = Future.never
 
   private implicit val requestTimeout: Timeout = requestTimeout(config)
-
   private implicit val backendRouter: ActorRef = system.actorOf(FromConfig.props(Props.empty), name = "backendRouter")
 
   private implicit def myRejectionHandler: RejectionHandler = RejectionHandler.newBuilder()
@@ -38,38 +39,60 @@ class WebServer(private val system: ActorSystem, private val config: Config) {
       case vr: ValidationRejection => buildBadRequestResponse(vr.message)
       case mrcr: MalformedRequestContentRejection => buildBadRequestResponse(mrcr.message)
     }.handleNotFound {
-    logRequest(complete((StatusCodes.NotFound, "Not found")))
+    routeWithDirectives(complete(StatusCodes.NotFound))
   }.result()
 
   def start(): Unit = {
     if (binding != Future.never) throw new IllegalStateException("Webserver already started")
-    val route = concat(RegisteredRoutes.getRegisteredRoutes.map(_.route): _*)
-    binding = Http().bindAndHandle(logRequest(route), host, port)
+    val route: Route = concat(RegisteredRoutes.getRegisteredRoutes.map(_.route): _*)
+    binding = Http().bindAndHandle(routeWithDirectives(route), host, port)
     binding.onComplete {
       case Success(bind) => logger.info(s"Webserver bound to ${bind.localAddress}")
-      case Failure(e) => logger.error("Webserver bounding error: " + e.getMessage)
+      case Failure(e) => logger.error(e, e.getMessage)
     }
   }
 
   private implicit def myExceptionHandler: ExceptionHandler = ExceptionHandler {
-    case ex => extractRequest { req =>
-      // implicit val request: HttpRequest = req
-      complete(HttpResponse(StatusCodes.InternalServerError, entity = "There was an internal server error."))
+    case ex: AskTimeoutException =>
+      logger.error(ex.getMessage)
+      routeWithDirectives(routeWithDirectives(complete(StatusCodes.ServiceUnavailable)))
+    case ex =>
+      logger.error(ex, ex.getMessage)
+      routeWithDirectives(routeWithDirectives(complete(StatusCodes.InternalServerError)))
+  }
+
+  private def routeWithDirectives(route: Route): Route = {
+    withRequestLogging {
+      withServerAddressHeader(s"$host:$port") {
+        route
+      }
     }
   }
 
-  private def logRequest(innerRoutes: => Route) = extractRequestContext { ctx =>
-    val time = System.currentTimeMillis()
-    extractClientIP { ip =>
-      mapResponse { res =>
-        logger.info(s"${ctx.request.protocol.value} ${ctx.request.method.value} ${ctx.request.uri.path}" +
-          s" | ${res.status.value} | IP: $ip | Time: ${calcMillis(time)}")
-        res
-      }(innerRoutes)
+  private def withRequestLogging: Directive0 =
+    if (config.getBoolean("akka.http.server.log-server-requests.enabled")) {
+      extractRequestContext.flatMap { ctx =>
+        val time = System.currentTimeMillis()
+        extractClientIP.flatMap { ip =>
+          mapResponse { res =>
+            logger.info(s"${ctx.request.protocol.value} ${ctx.request.method.value} ${ctx.request.uri.path}" +
+              s" | ${res.status.value} | IP: $ip | Time: ${calcMillis(time)}")
+            res
+          }
+        }
+      }
+    } else {
+      Directive.Empty
     }
-  }
 
   private def calcMillis(from: Long) = s"${System.currentTimeMillis() - from} ms"
+
+  private def withServerAddressHeader(serverAddress: String): Directive0 =
+    if (config.getBoolean("akka.http.server.address-server-header.enabled")) {
+      respondWithHeaders(RawHeader("X-Server-Address", serverAddress))
+    } else {
+      Directive.Empty
+    }
 
   def stop(): Unit = {
     if (binding == Future.never) throw new IllegalStateException("Webserver not active")
@@ -80,7 +103,7 @@ class WebServer(private val system: ActorSystem, private val config: Config) {
     }
   }
 
-  private def buildBadRequestResponse(message: String) = logRequest(complete(HttpResponse(
+  private def buildBadRequestResponse(message: String): Route = routeWithDirectives(complete(HttpResponse(
     StatusCodes.BadRequest, entity = HttpEntity(message).withContentType(ContentTypes.`application/json`))))
 
   private def requestTimeout(config: Config): Timeout = {
