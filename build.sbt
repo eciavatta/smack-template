@@ -12,7 +12,7 @@ lazy val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
 lazy val akkaRemote = "com.typesafe.akka" %% "akka-remote" % akkaVersion
 lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
 lazy val akkaZookeeper = "com.sclasen" %% "akka-zk-cluster-seed" % "0.1.10"
-lazy val alpakka = "com.typesafe.akka" %% "akka-stream-kafka" % "0.22"
+lazy val alpakkaKafka = "com.typesafe.akka" %% "akka-stream-kafka" % "0.22"
 lazy val scalacheck = "org.scalacheck" %% "scalacheck" % "1.14.0"
 lazy val scalaPB = "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
 lazy val scalatest = "org.scalatest" %% "scalatest" % "3.0.0" % "test"
@@ -60,9 +60,15 @@ lazy val frontend = module("frontend")
   )
 
 lazy val model = module("model")
+  .settings(
+    libraryDependencies ++= Seq(sprayJson)
+  )
 
 lazy val cluster = module("cluster")
   .dependsOn(model)
+  .settings(
+    libraryDependencies ++= Seq(akkaStream, alpakkaKafka)
+  )
 
 lazy val packSettings = Seq(
   packMain := Map("smack-template" -> "smack.Main")
@@ -89,8 +95,8 @@ lazy val buildInfoSettings = Seq(
 def module(name: String): Project =
   Project(id = name, base = file(name))
     .settings(commonSettings)
-    .settings(buildInfoSettings: _*)
     .enablePlugins(BuildInfoPlugin)
+    .settings(buildInfoSettings: _*)
 
 libraryDependencies ++= Seq(
   "io.netty" % "netty" % "3.7.0.Final",

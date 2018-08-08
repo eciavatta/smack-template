@@ -3,7 +3,7 @@ package smack
 import akka.actor.{ActorSystem, Props}
 import akka.cluster.seed.ZookeeperClusterSeed
 import com.typesafe.config.ConfigFactory
-import smack.backend.Backend
+import smack.cluster.backend.Backend
 import smack.frontend.server.WebServer
 
 object Main {

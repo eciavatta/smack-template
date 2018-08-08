@@ -1,14 +1,12 @@
-package smack.frontend.marshallers
+package smack.mashallers
 
 import java.text.SimpleDateFormat
 
 import com.typesafe.config.ConfigFactory
-import smack.frontend.routes.HealthMessage
 import smack.models.structures._
-import smack.models.messages._
-import spray.json.{DefaultJsonProtocol, DeserializationException, JsString, JsValue, RootJsonFormat}
+import spray.json._
 
-trait ModelMarshalling extends DefaultJsonProtocol {
+object StructureMarshalling extends DefaultJsonProtocol {
 
   implicit object DateJsonFormat extends RootJsonFormat[Date] {
 
@@ -23,7 +21,5 @@ trait ModelMarshalling extends DefaultJsonProtocol {
   }
 
   implicit val userFormat: RootJsonFormat[User] = jsonFormat4(User.apply)
-  implicit val createUserFormat: RootJsonFormat[CreateUserRequest] = jsonFormat3(CreateUserRequest.apply)
-  implicit val healthFormat: RootJsonFormat[HealthMessage] = jsonFormat6(HealthMessage.apply)
 
 }

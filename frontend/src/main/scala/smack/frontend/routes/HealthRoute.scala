@@ -8,11 +8,11 @@ import akka.http.scaladsl.model.{HttpRequest, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import smack.frontend.marshallers.ModelMarshalling
 import smack.frontend.server.RestRoute
+import smack.models.HealthMessage
 
-class HealthRoute(implicit val backendRouter: ActorRef,
-                  implicit val requestTimeout: Timeout) extends RestRoute with ModelMarshalling {
+class HealthRoute(implicit val backendRouter: ActorRef, implicit val requestTimeout: Timeout) extends RestRoute {
+  import smack.mashallers.MessageMarshalling._
 
   override protected def internalRoute(implicit request: HttpRequest): Route =
     pathPrefix("health") {
@@ -27,5 +27,3 @@ class HealthRoute(implicit val backendRouter: ActorRef,
       }
     }
 }
-
-case class HealthMessage(protocol: String, method: String, uri: String, clientIp: String, hostname: String, hostIp: String)

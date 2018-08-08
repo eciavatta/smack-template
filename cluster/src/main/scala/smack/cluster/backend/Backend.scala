@@ -1,10 +1,10 @@
-package smack.backend
+package smack.cluster.backend
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor._
 import smack.models.messages._
 import smack.models.structures._
 
-class Backend extends Actor with ActorLogging {
+class Backend(kafkaProducer: ActorRef) extends Actor with ActorLogging {
 
   private val OK: Int = 200
   private val Created: Int = 201
@@ -25,6 +25,12 @@ class Backend extends Actor with ActorLogging {
     case DeleteUserRequest(id) =>
       val user = users.find(u => u.id == id)
       sender ! DeleteUserResponse(user.fold(NotFound)(u => { users -= u; OK }))
+      DeleteUserRequest(id).toByteArray
   }
 
+}
+
+object Backend {
+  def props(kafkaProducer: ActorRef): Props = Props(new Backend(kafkaProducer))
+  def name: String = "backend"
 }

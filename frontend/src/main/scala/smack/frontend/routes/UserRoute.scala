@@ -5,15 +5,16 @@ import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import smack.frontend.marshallers.ModelMarshalling
 import smack.frontend.server.RestRoute
 import smack.frontend.server.ValidationDirective._
 import smack.frontend.validation.ValidationRules._
 import smack.models.messages._
 import smack.models.structures.User
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
-class UserRoute(val backendRouter: ActorRef)
-               (implicit val requestTimeout: Timeout) extends RestRoute with ModelMarshalling {
+class UserRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute {
+  import smack.mashallers.MessageMarshalling._
+  import smack.mashallers.StructureMarshalling._
 
   private val minUsernameLength = 6
 
@@ -21,7 +22,7 @@ class UserRoute(val backendRouter: ActorRef)
     pathPrefix("users") {
       pathEndOrSingleSlash {
         get {
-          handle(GetUsersRequest(), (g: GetUsersResponse) => Some(g.users))
+          handle(GetUsersRequest(), (g: GetUsersResponse) => g.users)
         } ~
           post {
             entity(as[CreateUserRequest]) { user =>
