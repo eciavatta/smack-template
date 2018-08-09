@@ -1,4 +1,4 @@
-package smack.serialization.mashallers
+package smack.common.mashallers
 
 import smack.models.HealthMessage
 import smack.models.messages.CreateUserRequest

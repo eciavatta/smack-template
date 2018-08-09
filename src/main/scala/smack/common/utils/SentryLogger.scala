@@ -1,4 +1,4 @@
-package smack.utils
+package smack.common.utils
 
 import akka.actor.Actor
 import akka.event.Logging._

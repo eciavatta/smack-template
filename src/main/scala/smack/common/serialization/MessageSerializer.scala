@@ -1,4 +1,4 @@
-package smack.serialization
+package smack.common.serialization
 
 import akka.serialization.SerializerWithStringManifest
 import smack.models.messages._
@@ -10,6 +10,9 @@ class MessageSerializer extends SerializerWithStringManifest {
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef =
     manifest match {
+      case TestRequestManifest => TestRequest.parseFrom(bytes)
+      case TestResponseManifest => TestResponse.parseFrom(bytes)
+
       case GetUsersRequestManifest => GetUsersRequest.parseFrom(bytes)
       case GetUsersResponseManifest => GetUsersResponse.parseFrom(bytes)
       case GetUserRequestManifest => GetUserRequest.parseFrom(bytes)
@@ -21,6 +24,9 @@ class MessageSerializer extends SerializerWithStringManifest {
     }
 
   override def manifest(o: AnyRef): String = o.getClass.getName
+  final val TestRequestManifest = classOf[TestRequest].getName
+  final val TestResponseManifest = classOf[TestResponse].getName
+
   final val GetUsersRequestManifest = classOf[GetUsersRequest].getName
   final val GetUsersResponseManifest = classOf[GetUsersResponse].getName
   final val GetUserRequestManifest = classOf[GetUserRequest].getName
@@ -32,6 +38,9 @@ class MessageSerializer extends SerializerWithStringManifest {
 
   override def toBinary(o: AnyRef): Array[Byte] = {
     o match {
+      case t: TestRequest => t.toByteArray
+      case t: TestResponse => t.toByteArray
+
       case g: GetUsersRequest => g.toByteArray
       case g: GetUsersResponse => g.toByteArray
       case g: GetUserRequest => g.toByteArray
@@ -50,4 +59,7 @@ object MessageSerializer {
   trait ResponseMessage {
     def statusCode: Int
   }
+
+  trait UserRequest extends RequestMessage
+  trait UserResponse extends ResponseMessage
 }

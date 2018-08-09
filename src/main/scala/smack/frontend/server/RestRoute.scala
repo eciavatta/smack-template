@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import smack.serialization.MessageSerializer.{RequestMessage, ResponseMessage}
+import smack.common.serialization.MessageSerializer.{RequestMessage, ResponseMessage}
 
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success}

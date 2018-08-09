@@ -6,46 +6,57 @@ import "structures.proto";
 
 package smack.models;
 
+message TestRequest {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.RequestMessage";
+    string value = 1;
+}
+
+message TestResponse {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.ResponseMessage";
+    int32 statusCode = 1;
+    string value = 2;
+}
+
 message GetUsersRequest {
-    option (scalapb.message).extends = "smack.serialization.MessageSerializer.RequestMessage";
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserRequest";
 }
 
 message GetUsersResponse {
-    option (scalapb.message).extends = "smack.serialization.MessageSerializer.ResponseMessage";
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserResponse";
     int32 statusCode = 1;
     repeated User users = 2;
 }
 
 message GetUserRequest {
-    option (scalapb.message).extends = "smack.serialization.MessageSerializer.RequestMessage";
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserRequest";
     int64 id = 1;
 }
 
 message GetUserResponse {
-    option (scalapb.message).extends = "smack.serialization.MessageSerializer.ResponseMessage";
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserResponse";
     int32 statusCode = 1;
     User user = 2;
 }
 
 message CreateUserRequest {
-    option (scalapb.message).extends = "smack.serialization.MessageSerializer.RequestMessage";
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserRequest";
     string email = 1;
     string username = 2;
     string password = 3;
 }
 
 message CreateUserResponse {
-    option (scalapb.message).extends = "smack.serialization.MessageSerializer.ResponseMessage";
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserResponse";
     int32 statusCode = 1;
     User user = 2;
 }
 
 message DeleteUserRequest {
-    option (scalapb.message).extends = "smack.serialization.MessageSerializer.RequestMessage";
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserRequest";
     int64 id = 1;
 }
 
 message DeleteUserResponse {
-    option (scalapb.message).extends = "smack.serialization.MessageSerializer.ResponseMessage";
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserResponse";
     int32 statusCode = 1;
 }

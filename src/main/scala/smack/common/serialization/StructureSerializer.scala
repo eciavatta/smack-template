@@ -1,4 +1,4 @@
-package smack.serialization
+package smack.common.serialization
 
 import akka.serialization.SerializerWithStringManifest
 import smack.models.structures._

@@ -24,25 +24,13 @@ class KafkaProducer(topic: String) extends Actor with ActorLogging {
 
   private val producerSettings: ProducerSettings[String, ByteBuffer] =
     ProducerSettings(config, new StringSerializer, new ByteBufferSerializer)
-      .withBootstrapServers(config.getString("akka.kafka.producer.bootstrap-server"))
+      .withBootstrapServers(config.getString("bootstrap-server"))
   private var kafkaProducer: producer.KafkaProducer[String, ByteBuffer] = _
-
-  private val kafkaGraph: RunnableGraph[SourceQueueWithComplete[KafkaMessage]] = Source
-    .queue[KafkaMessage](config.getInt("akka.kafka.producer.buffer-size"), OverflowStrategy.backpressure)
-    .via(ProtobufSerialization.serialize)
-    .via(Producer.flexiFlow(producerSettings, kafkaProducer))
-    .via(ProtobufSerialization.deserialize)
-    .map {
-      case SingleKafkaResult(_, _, _, _, _, _, sender) =>
-        sender ! Done
-    }
-    .toMat(Sink.ignore)(Keep.left)
-
   private var queue: SourceQueueWithComplete[KafkaMessage] = _
 
   override def preStart(): Unit = {
     kafkaProducer = producerSettings.createKafkaProducer()
-    queue = kafkaGraph.run()
+    queue = createKafkaGraph().run()
   }
 
   override def postStop(): Unit = {
@@ -60,6 +48,11 @@ class KafkaProducer(topic: String) extends Actor with ActorLogging {
       }
   }
 
+  private def createKafkaGraph(): RunnableGraph[SourceQueueWithComplete[KafkaMessage]] = Source
+    .queue[KafkaMessage](config.getInt("buffer-size"), OverflowStrategy.backpressure)
+    .via(ProtobufSerialization.serialize)
+    .via(Producer.flexiFlow(producerSettings, kafkaProducer))
+    .toMat(Sink.foreach(result => result.passThrough ! Done))(Keep.left)
 }
 
 object KafkaProducer {

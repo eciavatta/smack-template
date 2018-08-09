@@ -1,9 +1,9 @@
 package smack.entrypoints
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.cluster.seed.ZookeeperClusterSeed
 import com.typesafe.config.ConfigFactory
-import smack.backend.controllers.UserController
+import smack.backend.BackendSupervisor
 import smack.frontend.server.WebServer
 
 object Main {
@@ -26,7 +26,7 @@ object Main {
 
       case "backend" =>
         ZookeeperClusterSeed(system).join()
-        system.actorOf(Props[UserController], name = "backendWorker")
+        system.actorOf(BackendSupervisor.props, BackendSupervisor.name)
 
       case _ =>
         system.log.error("Undefined role. Please specify node role as first argument.")

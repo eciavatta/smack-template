@@ -8,7 +8,8 @@ object RegisteredRoutes {
 
   def getRegisteredRoutes(implicit backendRouter: ActorRef, requestTimeout: Timeout): Seq[RestRoute] = Seq(
     new UserRoute(backendRouter),
-    new HealthRoute
+    new HealthRoute,
+    new TestRoute(backendRouter)
   )
 
 }

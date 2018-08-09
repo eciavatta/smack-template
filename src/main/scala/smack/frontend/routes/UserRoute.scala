@@ -10,7 +10,7 @@ import smack.frontend.server.ValidationDirective._
 import smack.frontend.validation.ValidationRules._
 import smack.models.messages._
 import smack.models.structures.User
-import smack.serialization.mashallers.Marshalling
+import smack.common.mashallers.Marshalling
 
 class UserRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
 

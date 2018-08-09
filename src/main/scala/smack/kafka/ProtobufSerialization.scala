@@ -47,15 +47,8 @@ object ProtobufSerialization {
       if (metadata.hasOffset) Some(metadata.offset) else None,
       if (metadata.hasTimestamp) Some(metadata.timestamp) else None,
       record.key,
-      deserializeClass(record.key, record.value),
+      serialization.deserialize(record.value.array().drop(intSize), record.value.getInt, record.key),
       passThrough)
-  }
-
-  private def deserializeClass(manifest: String, buffer: ByteBuffer)(implicit serialization: Serialization): AnyRef = {
-    val identifier = buffer.getInt
-    val dataWithoutId = Array.ofDim[Byte](buffer.capacity - intSize)
-    buffer.get(dataWithoutId, intSize, dataWithoutId.length)
-    serialization.deserialize(dataWithoutId, identifier, manifest)
   }
 
 }
