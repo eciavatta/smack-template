@@ -1,74 +1,68 @@
-name := "smack-template"
-version := "0.1.0-SNAPSHOT"
+val projectName = "smack-template"
+val projectVersion = "0.2.0-SNAPSHOT"
+val projectOrganization = "it.eciavatta"
 
-// Constants
-val akkaVersion = "2.5.14"
+val akkaVersion = "2.5.13"
 val akkaHttpVersion = "10.1.3"
 
 // Managed dependencies
-lazy val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
-lazy val akkaCluster = "com.typesafe.akka" %% "akka-cluster" % akkaVersion
-lazy val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
-lazy val akkaRemote = "com.typesafe.akka" %% "akka-remote" % akkaVersion
-lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
-lazy val akkaZookeeper = "com.sclasen" %% "akka-zk-cluster-seed" % "0.1.10"
-lazy val alpakkaKafka = "com.typesafe.akka" %% "akka-stream-kafka" % "0.22"
-lazy val scalacheck = "org.scalacheck" %% "scalacheck" % "1.14.0"
-lazy val scalaPB = "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
-lazy val scalatest = "org.scalatest" %% "scalatest" % "3.0.0" % "test"
-lazy val sprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion
-lazy val sentry = "io.sentry" % "sentry" % "1.7.5"
+lazy val dependencies = Seq(
+  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+  "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
+  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-remote" % akkaVersion,
+  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+  "com.sclasen" %% "akka-zk-cluster-seed" % "0.1.10" exclude("com.typesafe", "ssl-config-core_2.12")
+    exclude("com.typesafe.akka", "akka-actor_2.12") exclude("com.typesafe.akka", "akka-cluster_2.12")
+    exclude("com.typesafe.akka", "akka-protobuf_2.12") exclude("com.typesafe.akka", "akka-remote_2.12")
+    exclude("com.typesafe.akka", "akka-stream_2.12") exclude("io.netty", "netty") exclude("org.slf4j", "slf4j-api"),
+  "com.typesafe.akka" %% "akka-stream-kafka" % "0.22",
+  "org.scalacheck" %% "scalacheck" % "1.14.0",
+  "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
+  "org.scalatest" %% "scalatest" % "3.0.0" % "test",
+  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+  "io.sentry" % "sentry" % "1.7.5" exclude("org.slf4j", "slf4j-api"))
 
 // add scalastyle to compile task
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
-lazy val commonSettings = Seq(
-  (compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value,
-  compileScalastyle := scalastyle.in(Compile).toTask("").value,
-  conflictManager in ThisBuild := ConflictManager.all,
-  libraryDependencies ++= Seq(akkaActor, akkaRemote, akkaCluster, scalatest, scalaPB),
-  organization := "it.eciavatta",
-  parallelExecution in Test := false,
-  scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
-  scalaVersion := "2.12.6",
-  updateOptions := updateOptions.value.withCachedResolution(true),
-  version := (version in ThisBuild).value,
 
-  PB.targets in Compile := Seq(
-    scalapb.gen() -> (sourceManaged in Compile).value
-  ),
-  PB.includePaths in Compile += file("model/src/main/protobuf")
-)
+enablePlugins(BuildInfoPlugin)
 
 lazy val root = Project(
-  id = "smack-template",
+  id = projectName,
   base = file(".")
-).enablePlugins(PackPlugin)
-  .enablePlugins(BuildInfoPlugin)
+).enablePlugins(BuildInfoPlugin)
+  .enablePlugins(PackPlugin)
   .enablePlugins(DockerPlugin)
-  .dependsOn(frontend, cluster, model)
-  .settings(commonSettings: _*)
+  .settings(buildInfoSettings: _*)
   .settings(packSettings: _*)
   .settings(dockerSettings: _*)
   .settings(
-    libraryDependencies ++= Seq(scalatest, akkaZookeeper, sentry)
+    name := projectName,
+    version := projectVersion,
+    organization := projectOrganization,
+
+    (compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value,
+    compileScalastyle := scalastyle.in(Compile).toTask("").value,
+    conflictManager in ThisBuild := ConflictManager.all,
+    parallelExecution in Test := false,
+    scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
+    updateOptions := updateOptions.value.withCachedResolution(true),
+    libraryDependencies ++= dependencies,
+    scalaVersion := "2.12.6",
+
+    PB.targets in Compile := Seq(
+      scalapb.gen() -> (sourceManaged in Compile).value / "protobuf"
+    ),
+    PB.includePaths in Compile += file("model/src/main/protobuf"),
+
+    unmanagedSourceDirectories in Compile += baseDirectory.value / "project"
   )
 
-lazy val frontend = module("frontend")
-  .dependsOn(model)
-  .settings(
-    libraryDependencies ++= Seq(akkaHttp, akkaStream, sprayJson)
-  )
-
-lazy val model = module("model")
-  .settings(
-    libraryDependencies ++= Seq(sprayJson)
-  )
-
-lazy val cluster = module("cluster")
-  .dependsOn(model)
-  .settings(
-    libraryDependencies ++= Seq(akkaStream, alpakkaKafka)
-  )
+lazy val buildInfoSettings = Seq(
+  buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+  buildInfoPackage := "smack"
+)
 
 lazy val packSettings = Seq(
   packMain := Map("smack-template" -> "smack.Main")
@@ -85,21 +79,4 @@ lazy val dockerSettings = Seq(
       entryPoint(s"${outputPath}bin/smack-template")
     }
   }
-)
-
-lazy val buildInfoSettings = Seq(
-  buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
-  buildInfoPackage := "smack"
-)
-
-def module(name: String): Project =
-  Project(id = name, base = file(name))
-    .settings(commonSettings)
-    .enablePlugins(BuildInfoPlugin)
-    .settings(buildInfoSettings: _*)
-
-libraryDependencies ++= Seq(
-  "io.netty" % "netty" % "3.7.0.Final",
-  "org.slf4j" % "slf4j-api" % "1.6.1",
-  "com.typesafe" % "config" % "1.2.0"
 )

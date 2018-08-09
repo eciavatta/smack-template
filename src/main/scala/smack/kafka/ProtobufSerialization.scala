@@ -1,4 +1,4 @@
-package smack.cluster.kafka
+package smack.kafka
 
 import java.nio.ByteBuffer
 
@@ -9,7 +9,7 @@ import akka.kafka.ProducerMessage.MultiResultPart
 import akka.serialization.Serialization
 import akka.stream.scaladsl.Flow
 import org.apache.kafka.clients.producer.{ProducerRecord, RecordMetadata}
-import smack.cluster.kafka.KafkaProducer.{EmptyResult, KafkaMessage, MultiKafkaResult, SingleKafkaResult}
+import smack.kafka.KafkaProducer.{EmptyResult, KafkaMessage, MultiKafkaResult, SingleKafkaResult}
 
 object ProtobufSerialization {
 

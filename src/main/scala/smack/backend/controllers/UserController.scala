@@ -1,10 +1,10 @@
-package smack.cluster.backend
+package smack.backend.controllers
 
 import akka.actor._
 import smack.models.messages._
 import smack.models.structures._
 
-class Backend(kafkaProducer: ActorRef) extends Actor with ActorLogging {
+class UserController(kafkaProducer: ActorRef) extends Actor with ActorLogging {
 
   private val OK: Int = 200
   private val Created: Int = 201
@@ -30,7 +30,7 @@ class Backend(kafkaProducer: ActorRef) extends Actor with ActorLogging {
 
 }
 
-object Backend {
-  def props(kafkaProducer: ActorRef): Props = Props(new Backend(kafkaProducer))
+object UserController {
+  def props(kafkaProducer: ActorRef): Props = Props(new UserController(kafkaProducer))
   def name: String = "backend"
 }

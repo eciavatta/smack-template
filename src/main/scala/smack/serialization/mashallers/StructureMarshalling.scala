@@ -1,4 +1,4 @@
-package smack.mashallers
+package smack.serialization.mashallers
 
 import java.text.SimpleDateFormat
 
@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigFactory
 import smack.models.structures._
 import spray.json._
 
-object StructureMarshalling extends DefaultJsonProtocol {
+trait StructureMarshalling extends DefaultJsonProtocol {
 
   implicit object DateJsonFormat extends RootJsonFormat[Date] {
 

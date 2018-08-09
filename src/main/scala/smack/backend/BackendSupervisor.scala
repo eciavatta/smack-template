@@ -1,14 +1,14 @@
-package smack.cluster
+package smack.backend
 
 import akka.actor.SupervisorStrategy.Resume
 import akka.actor.{Actor, ActorLogging, OneForOneStrategy, Props}
-import smack.cluster.backend.Backend
-import smack.cluster.kafka.KafkaProducer
+import smack.backend.controllers.UserController
+import smack.kafka.KafkaProducer
 
-class ClusterSupervisor extends Actor with ActorLogging {
+class BackendSupervisor extends Actor with ActorLogging {
 
   private val kafkaProducer = context.actorOf(KafkaProducer.props("test"), KafkaProducer.name)
-  private val backend = context.actorOf(Backend.props(kafkaProducer), Backend.name)
+  private val backend = context.actorOf(UserController.props(kafkaProducer), UserController.name)
 
   override def supervisorStrategy: OneForOneStrategy = OneForOneStrategy() {
     case _ => Resume
@@ -20,7 +20,7 @@ class ClusterSupervisor extends Actor with ActorLogging {
 
 }
 
-object ClusterSupervisor {
-  def props: Props = Props(new ClusterSupervisor)
+object BackendSupervisor {
+  def props: Props = Props(new BackendSupervisor)
   def name: String = "clusterSupervisor"
 }

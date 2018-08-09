@@ -10,11 +10,9 @@ import smack.frontend.server.ValidationDirective._
 import smack.frontend.validation.ValidationRules._
 import smack.models.messages._
 import smack.models.structures.User
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import smack.serialization.mashallers.Marshalling
 
-class UserRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute {
-  import smack.mashallers.MessageMarshalling._
-  import smack.mashallers.StructureMarshalling._
+class UserRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
 
   private val minUsernameLength = 6
 

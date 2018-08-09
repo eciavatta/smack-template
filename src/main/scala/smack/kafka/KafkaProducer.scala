@@ -1,4 +1,4 @@
-package smack.cluster.kafka
+package smack.kafka
 
 import java.nio.ByteBuffer
 
@@ -11,7 +11,7 @@ import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source, SourceQueueWithC
 import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult}
 import org.apache.kafka.clients.producer
 import org.apache.kafka.common.serialization.{ByteBufferSerializer, StringSerializer}
-import smack.cluster.kafka.KafkaProducer._
+import smack.kafka.KafkaProducer._
 
 import scala.concurrent.ExecutionContext
 

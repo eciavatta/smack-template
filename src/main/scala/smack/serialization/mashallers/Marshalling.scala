@@ -1,0 +1,3 @@
+package smack.serialization.mashallers
+
+trait Marshalling extends MessageMarshalling with StructureMarshalling

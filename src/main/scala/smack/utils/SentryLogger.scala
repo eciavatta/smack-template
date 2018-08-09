@@ -1,10 +1,11 @@
-package smack
+package smack.utils
 
 import akka.actor.Actor
 import akka.event.Logging._
-import io.sentry.{SentryClient, SentryClientFactory}
 import io.sentry.event.Event.Level
 import io.sentry.event.EventBuilder
+import io.sentry.{SentryClient, SentryClientFactory}
+import smack.BuildInfo
 
 class SentryLogger extends Actor {
 
