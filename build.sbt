@@ -21,6 +21,7 @@ lazy val dependencies = Seq(
     exclude("com.typesafe.akka", "akka-stream_2.12") exclude("io.netty", "netty") exclude("org.slf4j", "slf4j-api"),
   "com.typesafe.akka" %% "akka-stream-kafka" % "0.22",
   "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "0.20" exclude("com.google.guava", "guava"),
+  "com.typesafe.akka" %% "akka-cluster-metrics" % "2.5.13",
   "org.scalacheck" %% "scalacheck" % "1.14.0",
   "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
   "org.scalatest" %% "scalatest" % "3.0.0" % "test",
@@ -93,8 +94,8 @@ lazy val dockerSettings = Seq(
     val artifactTargetPath = s"/app/${artifact.name}"
     new sbtdocker.mutable.Dockerfile {
       from("java8:latest")
-      copy(artifact, artifactTargetPath)
       copy(file("agents/aspectjweaver-1.9.1.jar"), "/app/aspectjweaver.jar")
+      copy(artifact, artifactTargetPath)
       entryPoint("java", "-javaagent:/app/aspectjweaver.jar", "-cp", artifactTargetPath, "smack.entrypoints.Main")
     }
   }
