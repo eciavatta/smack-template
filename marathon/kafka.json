@@ -1,0 +1,39 @@
+{
+    "id": "kafka",
+    "env": {
+        "KAFKA_ZOOKEEPER_CONNECT": "188.166.36.186:2181/kafka"
+    },
+    "networks": [{
+        "mode": "container/bridge"
+    }],
+    "container": {
+        "type": "DOCKER",
+        "docker": {
+            "image": "docker.do.eciavatta.it/kafka",
+            "forcePullImage": true
+        },
+        "portMappings": [{
+            "containerPort": 9092,
+            "hostPort": 0,
+            "name": "kafka"
+        },
+        {
+            "hostPort": 0,
+            "name": "jmx"
+        }]
+    },
+    "cpus": 1,
+    "mem": 1024,
+    "instances": 1,
+    "fetch": [{
+        "uri": "file:///etc/docker.tar.gz"
+    }],
+    "healthChecks": [{
+        "portIndex": 0,
+        "protocol": "MESOS_TCP",
+        "gracePeriodSeconds": 300,
+        "intervalSeconds": 60,
+        "timeoutSeconds": 20,
+        "maxConsecutiveFailures": 3
+    }]
+}

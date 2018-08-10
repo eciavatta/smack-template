@@ -1,0 +1,52 @@
+{
+    "id": "smack-frontend",
+    "cpus": 0.5,
+    "mem": 248.0,
+    "networks": [{
+        "mode": "container/bridge"
+    }],
+    "container": {
+        "type": "DOCKER",
+        "docker": {
+            "image": "docker.do.eciavatta.it/smack-template",
+            "forcePullImage": true,
+            "parameters": [
+                { "key": "label", "value": "pippo"}
+            ]
+        },
+        "portMappings": [{
+            "containerPort": 8080,
+            "hostPort": 0,
+            "servicePort": 8081,
+            "name": "http"
+        },
+        {
+            "containerPort": 5000,
+            "hostPort": 0,
+            "name": "remote"
+        }]
+    },
+    "env": {
+        "AKKA_ZOOKEEPER_CONNECT": "188.166.36.186:2181",
+        "LOGGER": "smack.SentryLogger",
+        "LOG_LEVEL": "WARNING",
+        "SENTRY_DNS": "https://4341aca8cb2547f496447317b7be17f0@sentry.io/1256253"
+    },
+    "instances": 1,
+    "healthChecks": [{
+        "portIndex": 0,
+        "protocol": "MESOS_TCP",
+        "gracePeriodSeconds": 300,
+        "intervalSeconds": 60,
+        "timeoutSeconds": 20,
+        "maxConsecutiveFailures": 3
+    }],
+    "args": ["frontend"],
+    "fetch": [{
+        "uri": "file:///etc/docker.tar.gz"
+    }],
+    "labels": {
+        "HAPROXY_0_GROUP": "backend",
+        "HAPROXY_1_ENABLED": "false"
+    }
+}
