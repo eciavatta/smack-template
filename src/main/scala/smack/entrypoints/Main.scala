@@ -28,6 +28,10 @@ object Main {
         ZookeeperClusterSeed(system).join()
         system.actorOf(BackendSupervisor.props, BackendSupervisor.name)
 
+        sys.addShutdownHook {
+          system.terminate()
+        }
+
       case _ =>
         system.log.error("Undefined role. Please specify node role as first argument.")
         system.terminate()

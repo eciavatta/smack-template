@@ -1,3 +1,5 @@
+import sbtassembly.AssemblyKeys
+
 val projectName = "smack-template"
 val projectVersion = "0.2.0-SNAPSHOT"
 val projectOrganization = "it.eciavatta"
@@ -17,7 +19,8 @@ lazy val dependencies = Seq(
     exclude("com.typesafe.akka", "akka-protobuf_2.12") exclude("com.typesafe.akka", "akka-remote_2.12")
     exclude("com.typesafe.akka", "akka-stream_2.12") exclude("io.netty", "netty") exclude("org.slf4j", "slf4j-api"),
   "com.typesafe.akka" %% "akka-stream-kafka" % "0.22",
-  "org.scalacheck" %% "scalacheck" % "1.14.0",
+  "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "0.20" exclude("com.google.guava", "guava"),
+"org.scalacheck" %% "scalacheck" % "1.14.0",
   "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
   "org.scalatest" %% "scalatest" % "3.0.0" % "test",
   "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
@@ -26,16 +29,14 @@ lazy val dependencies = Seq(
 // add scalastyle to compile task
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
 
-enablePlugins(BuildInfoPlugin)
-
 lazy val root = Project(
   id = projectName,
   base = file(".")
 ).enablePlugins(BuildInfoPlugin)
-  .enablePlugins(PackPlugin)
+  .enablePlugins(AssemblyPlugin)
   .enablePlugins(DockerPlugin)
   .settings(buildInfoSettings: _*)
-  .settings(packSettings: _*)
+  .settings(assemblySettings: _*)
   .settings(dockerSettings: _*)
   .settings(
     name := projectName,
@@ -50,13 +51,15 @@ lazy val root = Project(
     updateOptions := updateOptions.value.withCachedResolution(true),
     libraryDependencies ++= dependencies,
     scalaVersion := "2.12.6",
+    test in assembly := {},
 
     PB.targets in Compile := Seq(
       scalapb.gen() -> (sourceManaged in Compile).value / "protobuf"
     ),
     PB.includePaths in Compile += file("model/src/main/protobuf"),
 
-    unmanagedSourceDirectories in Compile += baseDirectory.value / "project"
+    mainClass in assembly := Some("smack.entrypoints.Main"),
+    assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
   )
 
 lazy val buildInfoSettings = Seq(
@@ -64,19 +67,23 @@ lazy val buildInfoSettings = Seq(
   buildInfoPackage := "smack"
 )
 
-lazy val packSettings = Seq(
-  packMain := Map("smack-template" -> "smack.Main")
+lazy val assemblySettings = Seq(
+  assemblyMergeStrategy in assembly := {
+    case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
+    case oldStrategy => (assemblyMergeStrategy in assembly).value(oldStrategy)
+  }
 )
 
 lazy val dockerSettings = Seq(
-  docker := (docker dependsOn pack).value,
+  docker := (docker dependsOn assembly).value,
   imageNames in docker := Seq(ImageName(s"${name.value}:latest")),
   dockerfile in docker := {
-    val outputPath = s"/app/${name.value}-${version.value}/"
+    val artifact = (AssemblyKeys.assemblyOutputPath in assembly).value
+    val artifactTargetPath = s"/app/${artifact.name}"
     new sbtdocker.mutable.Dockerfile {
       from("java8:latest")
-      copy(file("target/pack/"), outputPath)
-      entryPoint(s"${outputPath}bin/smack-template")
+      copy(artifact, artifactTargetPath)
+      entryPoint("java", "-cp", artifactTargetPath)
     }
   }
 )

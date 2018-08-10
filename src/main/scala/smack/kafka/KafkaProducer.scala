@@ -8,17 +8,16 @@ import akka.kafka.scaladsl.Producer
 import akka.kafka.ProducerSettings
 import akka.serialization.{Serialization, SerializationExtension}
 import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete}
-import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult}
+import akka.stream.{OverflowStrategy, QueueOfferResult}
 import org.apache.kafka.clients.producer
 import org.apache.kafka.common.serialization.{ByteBufferSerializer, StringSerializer}
+import smack.common.traits.{ContextDispatcher, FactoryMaterializer}
 import smack.kafka.KafkaProducer._
 
-import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
 
-class KafkaProducer(topic: String) extends Actor with ActorLogging {
+class KafkaProducer(topic: String) extends Actor with ActorLogging with FactoryMaterializer with ContextDispatcher {
 
-  private implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
-  private implicit val executionContext: ExecutionContext = context.dispatcher
   private val config = context.system.settings.config.getConfig("akka.kafka.producer")
   private implicit val serialization: Serialization = SerializationExtension(context.system)
 
@@ -34,8 +33,8 @@ class KafkaProducer(topic: String) extends Actor with ActorLogging {
   }
 
   override def postStop(): Unit = {
-    kafkaProducer.close()
     queue.complete()
+    kafkaProducer.close()
   }
 
   override def receive: Receive = {
@@ -50,6 +49,13 @@ class KafkaProducer(topic: String) extends Actor with ActorLogging {
 
   private def createKafkaGraph(): RunnableGraph[SourceQueueWithComplete[KafkaMessage]] = Source
     .queue[KafkaMessage](config.getInt("buffer-size"), OverflowStrategy.backpressure)
+    .watchTermination() { (sourceQueue, futureDone) =>
+      futureDone.onComplete {
+        case Success(_) => log.info(s"Kafka producer stream of actor ${self.path} is closed.")
+        case Failure(ex) => log.error(ex, ex.getMessage)
+      }
+      sourceQueue
+    }
     .via(ProtobufSerialization.serialize)
     .via(Producer.flexiFlow(producerSettings, kafkaProducer))
     .toMat(Sink.foreach(result => result.passThrough ! Done))(Keep.left)

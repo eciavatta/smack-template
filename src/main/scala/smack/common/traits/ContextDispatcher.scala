@@ -7,6 +7,6 @@ import scala.concurrent.ExecutionContext
 trait ContextDispatcher {
   this: Actor =>
 
-  implicit val executionContext: ExecutionContext = context.dispatcher
+  protected implicit val executionContext: ExecutionContext = context.dispatcher
 
 }
