@@ -6,9 +6,9 @@ import smack.frontend.server.RestRoute
 
 object RegisteredRoutes {
 
-  def getRegisteredRoutes(implicit backendRouter: ActorRef, requestTimeout: Timeout): Seq[RestRoute] = Seq(
+  def getRegisteredRoutes(backendRouter: ActorRef)(implicit requestTimeout: Timeout): Seq[RestRoute] = Seq(
     new UserRoute(backendRouter),
-    new HealthRoute,
+    new HealthRoute(backendRouter),
     new TestRoute(backendRouter)
   )
 

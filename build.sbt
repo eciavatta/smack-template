@@ -18,20 +18,24 @@ lazy val dependencies = Seq(
   "com.sclasen" %% "akka-zk-cluster-seed" % "0.1.10" exclude("com.typesafe", "ssl-config-core_2.12")
     exclude("com.typesafe.akka", "akka-actor_2.12") exclude("com.typesafe.akka", "akka-cluster_2.12")
     exclude("com.typesafe.akka", "akka-protobuf_2.12") exclude("com.typesafe.akka", "akka-remote_2.12")
-    exclude("com.typesafe.akka", "akka-stream_2.12") exclude("io.netty", "netty") exclude("org.slf4j", "slf4j-api"),
-  "com.typesafe.akka" %% "akka-stream-kafka" % "0.22",
+    exclude("com.typesafe.akka", "akka-stream_2.12") exclude("io.netty", "netty") exclude("org.slf4j", "slf4j-api")
+    exclude("org.apache.zookeeper", "zookeeper"),
+  "com.typesafe.akka" %% "akka-stream-kafka" % "0.22" exclude("org.apache.kafka", "kafka-clients")
+    exclude("org.lz4", "lz4-java") exclude("org.xerial.snappy", "snappy-java"),
   "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "0.20" exclude("com.google.guava", "guava"),
   "com.typesafe.akka" %% "akka-cluster-metrics" % "2.5.13",
   "org.scalacheck" %% "scalacheck" % "1.14.0",
   "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
-  "org.scalatest" %% "scalatest" % "3.0.0" % "test",
+  "org.scalatest" %% "scalatest" % "3.0.5" % Test,
   "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
-  "io.sentry" % "sentry" % "1.7.5" exclude("org.slf4j", "slf4j-api"),
+  "io.sentry" % "sentry" % "1.7.5" exclude("org.slf4j", "slf4j-api") exclude("com.fasterxml.jackson.core", "jackson-core"),
   "io.kamon" %% "kamon-akka-remote-2.5" % "1.1.0" exclude("com.lihaoyi", "sourcecode_2.12")
     exclude("com.typesafe", "config"),
   "io.kamon" %% "kamon-executors" % "1.0.1" exclude("io.kamon", "kamon-core_2.12"),
   "io.kamon" %% "kamon-datadog" % "1.0.0" exclude("io.kamon", "kamon-core_2.12"),
-  "com.github.scopt" %% "scopt" % "3.7.0"
+  "com.github.scopt" %% "scopt" % "3.7.0",
+  "net.manub" %% "scalatest-embedded-kafka" % "1.1.1" exclude("org.slf4j", "slf4j-api"),
+  "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test
 )
 
 // add scalastyle to compile task

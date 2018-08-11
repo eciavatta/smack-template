@@ -10,7 +10,8 @@ import smack.common.mashallers.Marshalling
 import smack.frontend.server.RestRoute
 import smack.models.messages._
 
-class TestRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
+class TestRoute(protected val backendRouter: ActorRef)(protected implicit val requestTimeout: Timeout)
+  extends RestRoute with Marshalling {
 
   override protected def internalRoute(implicit request: HttpRequest): Route =
     pathPrefix("test" / Segment) { s =>

@@ -14,11 +14,11 @@ import scala.util.{Failure, Success}
 
 abstract class RestRoute {
 
-  implicit def backendRouter: ActorRef
+  protected def backendRouter: ActorRef
 
-  implicit def requestTimeout: Timeout
+  protected implicit def requestTimeout: Timeout
 
-  def route: Route = extractRequest { req =>
+  private[server] def route: Route = extractRequest { req =>
     implicit val request: HttpRequest = req
     internalRoute
   }

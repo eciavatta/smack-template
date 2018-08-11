@@ -2,28 +2,33 @@ package smack.kafka
 
 import java.nio.ByteBuffer
 
-import akka.Done
+import akka.{Done, NotUsed}
 import akka.actor._
 import akka.kafka.scaladsl.Producer
-import akka.kafka.ProducerSettings
-import akka.serialization.{Serialization, SerializationExtension}
-import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete}
-import akka.stream.{OverflowStrategy, QueueOfferResult}
+import akka.kafka.{ProducerMessage, ProducerSettings}
+import akka.serialization.Serialization
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, RunnableGraph, Sink, Source, SourceQueueWithComplete}
+import akka.stream._
 import org.apache.kafka.clients.producer
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteBufferSerializer, StringSerializer}
-import smack.common.traits.{ContextDispatcher, FactoryMaterializer}
+import smack.common.traits.{ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
 import smack.kafka.KafkaProducer._
+import smack.kafka.ProtobufSerialization.serializeMessage
+import smack.models.{SerializationException, TestException}
+import smack.models.messages.GenerateException
 
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
-class KafkaProducer(topic: String) extends Actor with ActorLogging with FactoryMaterializer with ContextDispatcher {
+class KafkaProducer(topic: String, kafkaPort: Option[Int] = None)
+  extends Actor with ActorLogging with ImplicitMaterializer with ContextDispatcher with ImplicitSerialization {
 
   private val config = context.system.settings.config.getConfig("akka.kafka.producer")
-  private implicit val serialization: Serialization = SerializationExtension(context.system)
 
   private val producerSettings: ProducerSettings[String, ByteBuffer] =
     ProducerSettings(config, new StringSerializer, new ByteBufferSerializer)
-      .withBootstrapServers(config.getString("bootstrap-server"))
+      .withBootstrapServers(kafkaPort.fold(config.getString("bootstrap-server"))(port => s"127.0.0.1:$port"))
   private var kafkaProducer: producer.KafkaProducer[String, ByteBuffer] = _
   private var queue: SourceQueueWithComplete[KafkaMessage] = _
 
@@ -33,11 +38,16 @@ class KafkaProducer(topic: String) extends Actor with ActorLogging with FactoryM
   }
 
   override def postStop(): Unit = {
-    queue.complete()
     kafkaProducer.close()
   }
 
+  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
+    queue.complete()
+    super.preRestart(reason, message)
+  }
+
   override def receive: Receive = {
+    case ex: GenerateException => throw TestException(ex.message)
     case message: AnyRef =>
       queue.offer(KafkaMessage(topic = topic, key = message.getClass.getName, value = message, sender = sender())).map {
         case QueueOfferResult.Enqueued => log.debug(s"Kafka message of class ${message.getClass.getName} is enqueued")
@@ -45,20 +55,59 @@ class KafkaProducer(topic: String) extends Actor with ActorLogging with FactoryM
         case QueueOfferResult.Failure(ex) => log.error(ex, s"Error after enqueuing message of class ${message.getClass.getName}")
         case QueueOfferResult.QueueClosed => log.debug(s"Kafka message of class ${message.getClass.getName} is dropped because queue is closed")
       }
+
   }
 
-  private def createKafkaGraph(): RunnableGraph[SourceQueueWithComplete[KafkaMessage]] = Source
-    .queue[KafkaMessage](config.getInt("buffer-size"), OverflowStrategy.backpressure)
-    .watchTermination() { (sourceQueue, futureDone) =>
-      futureDone.onComplete {
-        case Success(_) => log.info(s"Kafka producer stream of actor ${self.path} is closed.")
-        case Failure(ex) => log.error(ex, ex.getMessage)
-      }
-      sourceQueue
+  private def sourceQueue: Source[KafkaMessage, SourceQueueWithComplete[KafkaMessage]] =
+    Source.queue[KafkaMessage](config.getInt("buffer-size"), OverflowStrategy.backpressure)
+
+  private def watchTermination = Flow[KafkaMessage].watchTermination() { (sourceQueue, futureDone) =>
+    futureDone.onComplete {
+      case Success(_) => log.debug(s"Kafka producer stream of actor ${self.path} is closed.")
+      case Failure(_: AbruptStageTerminationException) => log.debug(s"Kafka producer stream of actor is abruptly terminated.")
+      case Failure(ex) => log.error(ex, ex.getMessage)
     }
-    .via(ProtobufSerialization.serialize)
-    .via(Producer.flexiFlow(producerSettings, kafkaProducer))
-    .toMat(Sink.foreach(result => result.passThrough ! Done))(Keep.left)
+    sourceQueue
+  }
+
+  private def serialize(implicit serialization: Serialization) = Flow[KafkaMessage] map { message =>
+    serializeMessage(message.value) match {
+      case Success(serialized) => Right(ProducerMessage.Message(
+        new ProducerRecord(message.topic, message.partition, message.key, serialized), message.sender)
+      )
+      case Failure(_) => Left(message.sender)
+    }
+  }
+
+  private def filterSerializable = Flow[Either[ActorRef, ProducerMessage.Message[String, ByteBuffer, ActorRef]]] filter(_.isRight) map (_.right.get)
+  private def filterUnSerializable = Flow[Either[ActorRef, ProducerMessage.Message[String, ByteBuffer, ActorRef]]] filter(_.isLeft) map {
+    either => (either.left.get, Failure(SerializationException))
+  }
+
+  private def sendToKafka: Flow[ProducerMessage.Envelope[String, ByteBuffer, ActorRef], ProducerMessage.Results[String, ByteBuffer, ActorRef], NotUsed] =
+    Producer.flexiFlow[String, ByteBuffer, ActorRef](producerSettings, kafkaProducer)
+
+  private def mapKafkaResult = Flow[ProducerMessage.Results[String, ByteBuffer, ActorRef]] map {
+    result => (result.passThrough, Success(Done))
+  }
+
+  private def sendResponse: Sink[(ActorRef, Try[Done]), Future[Done]] =
+    Sink.foreach[(ActorRef, Try[Done])](pair => pair._1 ! pair._2)
+
+  private def createKafkaGraph(): RunnableGraph[SourceQueueWithComplete[KafkaMessage]] = RunnableGraph.fromGraph({
+    GraphDSL.create(sourceQueue) {
+      implicit builder => queueShape =>
+        import GraphDSL.Implicits._
+
+        val broadcast = builder.add(Broadcast[Either[ActorRef, ProducerMessage.Message[String, ByteBuffer, ActorRef]]](2))
+        val merge = builder.add(Merge[(ActorRef, Try[Done])](2))
+
+        queueShape ~> watchTermination ~> serialize ~> broadcast ~> filterSerializable ~> sendToKafka ~> mapKafkaResult ~> merge ~> sendResponse
+                                                       broadcast ~> filterUnSerializable                                ~> merge
+        ClosedShape
+    }
+  })
+
 }
 
 object KafkaProducer {
@@ -66,13 +115,17 @@ object KafkaProducer {
   def props(topic: String): Props = Props(new KafkaProducer(topic))
   def name: String = "kafkaProducer"
 
-  case class KafkaMessage(topic: String, partition: Int = 0, key: String, value: AnyRef, sender: ActorRef)
+  // for testing purpose
+  private[kafka] def props(topic: String, port: Int): Props = Props(new KafkaProducer(topic, Some(port)))
 
-  trait KafkaResult
-  case class SingleKafkaResult(topic: String, partition: Int, offset: Option[Long], timestamp: Option[Long],
-                               key: String, value: AnyRef, sender: ActorRef) extends KafkaResult
-  case class MultiKafkaResult(parts: List[SingleKafkaResult], sender: ActorRef) extends KafkaResult
-  case class EmptyResult(sender: ActorRef) extends KafkaResult
+  private[kafka] case class KafkaMessage(topic: String, partition: Int = 0, key: String, value: AnyRef, sender: ActorRef)
+
+  private[kafka] trait KafkaResult
+  private[kafka] case class SingleKafkaResult(topic: String, partition: Int, offset: Option[Long],
+                                              timestamp: Option[Long], key: String, value: AnyRef,
+                                              sender: ActorRef) extends KafkaResult
+  private[kafka] case class MultiKafkaResult(parts: List[SingleKafkaResult], sender: ActorRef) extends KafkaResult
+  private[kafka] case class EmptyResult(sender: ActorRef) extends KafkaResult
 
 }
 

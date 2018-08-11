@@ -12,7 +12,8 @@ import smack.models.messages._
 import smack.models.structures.User
 import smack.common.mashallers.Marshalling
 
-class UserRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
+class UserRoute(protected val backendRouter: ActorRef)(protected implicit val requestTimeout: Timeout)
+  extends RestRoute with Marshalling {
 
   private val minUsernameLength = 6
 

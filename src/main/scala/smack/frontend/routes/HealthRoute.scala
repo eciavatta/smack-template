@@ -12,7 +12,8 @@ import smack.frontend.server.RestRoute
 import smack.models.HealthMessage
 import smack.common.mashallers.Marshalling
 
-class HealthRoute(implicit val backendRouter: ActorRef, implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
+class HealthRoute(protected val backendRouter: ActorRef)(protected implicit val requestTimeout: Timeout)
+  extends RestRoute with Marshalling {
 
   override protected def internalRoute(implicit request: HttpRequest): Route =
     pathPrefix("health") {

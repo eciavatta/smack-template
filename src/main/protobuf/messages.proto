@@ -6,6 +6,10 @@ import "structures.proto";
 
 package smack.models;
 
+message GenerateException {
+    string message = 1;
+}
+
 message TestRequest {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.RequestMessage";
     string value = 1;

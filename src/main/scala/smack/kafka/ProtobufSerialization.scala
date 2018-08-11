@@ -11,21 +11,11 @@ import akka.stream.scaladsl.Flow
 import org.apache.kafka.clients.producer.{ProducerRecord, RecordMetadata}
 import smack.kafka.KafkaProducer.{EmptyResult, KafkaMessage, MultiKafkaResult, SingleKafkaResult}
 
+import scala.util.Try
+
 object ProtobufSerialization {
 
   private val intSize: Int = 4
-
-  def serialize(implicit serialization: Serialization): Flow[KafkaMessage, ProducerMessage.Message[String, ByteBuffer, ActorRef], NotUsed] =
-    Flow[KafkaMessage].map { m =>
-      val serializer = serialization.findSerializerFor(m.value)
-      val data = serializer.toBinary(m.value)
-      val byteBuffer = ByteBuffer.allocate(intSize + data.length)
-      byteBuffer.putInt(serializer.identifier)
-      byteBuffer.put(data)
-      ProducerMessage.Message(
-        new ProducerRecord(m.topic, m.partition, m.key, byteBuffer),
-        m.sender)
-    }
 
   def deserialize(implicit serialization: Serialization): Flow[ProducerMessage.Results[String, ByteBuffer, ActorRef], KafkaProducer.KafkaResult, NotUsed] =
     Flow[ProducerMessage.Results[String, ByteBuffer, ActorRef]].map {
@@ -40,15 +30,25 @@ object ProtobufSerialization {
         EmptyResult(passThrough)
     }
 
+  private[kafka] def serializeMessage(elem: AnyRef)(implicit serialization: Serialization) = Try {
+    val serializer = serialization.findSerializerFor(elem)
+    val data = serializer.toBinary(elem)
+    val byteBuffer = ByteBuffer.allocate(intSize + data.length)
+    byteBuffer.putInt(serializer.identifier)
+    byteBuffer.put(data)
+  }
+
+  private[kafka] def deserializeMessage(manifest: String, data: ByteBuffer)(implicit serialization: Serialization): Try[AnyRef] =
+    serialization.deserialize(data.array().drop(intSize), data.getInt, manifest)
+
   private def createSingleKafkaResult(metadata: RecordMetadata, record: ProducerRecord[String, ByteBuffer], passThrough: ActorRef)
-                                     (implicit serialization: Serialization): SingleKafkaResult = {
+                                     (implicit serialization: Serialization): SingleKafkaResult =
     SingleKafkaResult(metadata.topic,
       metadata.partition,
       if (metadata.hasOffset) Some(metadata.offset) else None,
       if (metadata.hasTimestamp) Some(metadata.timestamp) else None,
       record.key,
-      serialization.deserialize(record.value.array().drop(intSize), record.value.getInt, record.key),
+      deserializeMessage(record.key, record.value),
       passThrough)
-  }
 
 }

@@ -31,7 +31,7 @@ class WebServer(private val system: ActorSystem, private val config: Config) {
   private var binding: Future[Http.ServerBinding] = Future.never
 
   private implicit val requestTimeout: Timeout = requestTimeout(config)
-  private implicit val backendRouter: ActorRef = system.actorOf(FromConfig.props(Props.empty), name = "backendRouter")
+  private val backendRouter: ActorRef = system.actorOf(FromConfig.props(Props.empty), name = "backendRouter")
 
   private implicit def myRejectionHandler: RejectionHandler = RejectionHandler.newBuilder()
     .handle {
@@ -44,7 +44,7 @@ class WebServer(private val system: ActorSystem, private val config: Config) {
 
   def start(): Unit = {
     if (binding != Future.never) throw new IllegalStateException("Webserver already started")
-    val route: Route = concat(RegisteredRoutes.getRegisteredRoutes.map(_.route): _*)
+    val route: Route = concat(RegisteredRoutes.getRegisteredRoutes(backendRouter).map(_.route): _*)
     binding = Http().bindAndHandle(routeWithDirectives(route), host, port)
     binding.onComplete {
       case Success(bind) => logger.info(s"Webserver bound to ${bind.localAddress}")
