@@ -9,7 +9,7 @@ import akka.kafka.ProducerMessage.MultiResultPart
 import akka.serialization.Serialization
 import akka.stream.scaladsl.Flow
 import org.apache.kafka.clients.producer.{ProducerRecord, RecordMetadata}
-import smack.kafka.KafkaProducer.{EmptyResult, KafkaMessage, MultiKafkaResult, SingleKafkaResult}
+import smack.kafka.KafkaProducer.{EmptyResult, MultiKafkaResult, SingleKafkaResult}
 
 import scala.util.Try
 

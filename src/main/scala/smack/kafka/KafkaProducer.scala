@@ -2,28 +2,30 @@ package smack.kafka
 
 import java.nio.ByteBuffer
 
-import akka.{Done, NotUsed}
-import akka.actor._
+import akka.actor.{Actor, ActorRef, Props}
+import akka.event.Logging
 import akka.kafka.scaladsl.Producer
 import akka.kafka.{ProducerMessage, ProducerSettings}
 import akka.serialization.Serialization
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, RunnableGraph, Sink, Source, SourceQueueWithComplete}
-import akka.stream._
+import akka.stream.{AbruptStageTerminationException, ClosedShape, OverflowStrategy, QueueOfferResult}
+import akka.{Done, NotUsed}
 import org.apache.kafka.clients.producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteBufferSerializer, StringSerializer}
 import smack.common.traits.{ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
-import smack.kafka.KafkaProducer._
+import smack.kafka.KafkaProducer.KafkaMessage
 import smack.kafka.ProtobufSerialization.serializeMessage
-import smack.models.{SerializationException, TestException}
 import smack.models.messages.GenerateException
+import smack.models.{SerializationException, TestException}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 class KafkaProducer(topic: String, kafkaPort: Option[Int] = None)
-  extends Actor with ActorLogging with ImplicitMaterializer with ContextDispatcher with ImplicitSerialization {
+  extends Actor with ImplicitMaterializer with ImplicitSerialization with ContextDispatcher {
 
+  private val log = Logging(context.system, context.self)
   private val config = context.system.settings.config.getConfig("akka.kafka.producer")
 
   private val producerSettings: ProducerSettings[String, ByteBuffer] =
@@ -38,12 +40,7 @@ class KafkaProducer(topic: String, kafkaPort: Option[Int] = None)
   }
 
   override def postStop(): Unit = {
-    kafkaProducer.close()
-  }
-
-  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
-    queue.complete()
-    super.preRestart(reason, message)
+    queue.watchCompletion() map (_ => kafkaProducer.close())
   }
 
   override def receive: Receive = {
@@ -55,7 +52,6 @@ class KafkaProducer(topic: String, kafkaPort: Option[Int] = None)
         case QueueOfferResult.Failure(ex) => log.error(ex, s"Error after enqueuing message of class ${message.getClass.getName}")
         case QueueOfferResult.QueueClosed => log.debug(s"Kafka message of class ${message.getClass.getName} is dropped because queue is closed")
       }
-
   }
 
   private def sourceQueue: Source[KafkaMessage, SourceQueueWithComplete[KafkaMessage]] =
@@ -63,8 +59,8 @@ class KafkaProducer(topic: String, kafkaPort: Option[Int] = None)
 
   private def watchTermination = Flow[KafkaMessage].watchTermination() { (sourceQueue, futureDone) =>
     futureDone.onComplete {
-      case Success(_) => log.debug(s"Kafka producer stream of actor ${self.path} is closed.")
-      case Failure(_: AbruptStageTerminationException) => log.debug(s"Kafka producer stream of actor is abruptly terminated.")
+      case Success(_) => log.debug(s"Kafka producer stream for topic $topic is closed.")
+      case Failure(_: AbruptStageTerminationException) => log.debug(s"Kafka producer stream for topic $topic is abruptly terminated.")
       case Failure(ex) => log.error(ex, ex.getMessage)
     }
     sourceQueue
@@ -128,5 +124,3 @@ object KafkaProducer {
   private[kafka] case class EmptyResult(sender: ActorRef) extends KafkaResult
 
 }
-
-

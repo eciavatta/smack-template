@@ -12,10 +12,11 @@ import akka.routing.FromConfig
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.typesafe.config.Config
+import smack.common.utils.Converters
 import smack.frontend.routes.RegisteredRoutes
 import smack.frontend.server.ValidationDirective._
 
-import scala.concurrent.duration.{Duration, FiniteDuration, _}
+import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -30,7 +31,7 @@ class WebServer(private val system: ActorSystem, private val config: Config) {
   private val port: Int = config.getInt("akka.http.server.port")
   private var binding: Future[Http.ServerBinding] = Future.never
 
-  private implicit val requestTimeout: Timeout = requestTimeout(config)
+  private implicit val requestTimeout: Timeout = Converters.toScalaDuration(config, "akka.http.server.request-timeout")
   private val backendRouter: ActorRef = system.actorOf(FromConfig.props(Props.empty), name = "backendRouter")
 
   private implicit def myRejectionHandler: RejectionHandler = RejectionHandler.newBuilder()
@@ -105,11 +106,5 @@ class WebServer(private val system: ActorSystem, private val config: Config) {
 
   private def buildBadRequestResponse(message: String): Route = routeWithDirectives(complete(HttpResponse(
     StatusCodes.BadRequest, entity = HttpEntity(message).withContentType(ContentTypes.`application/json`))))
-
-  private def requestTimeout(config: Config): Timeout = {
-    val t = config.getString("akka.http.server.request-timeout")
-    val d = Duration(t)
-    FiniteDuration(d.length, d.unit)
-  }
 
 }

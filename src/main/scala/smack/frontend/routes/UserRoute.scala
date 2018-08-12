@@ -1,7 +1,6 @@
 package smack.frontend.routes
 
 import akka.actor.ActorRef
-import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
@@ -12,12 +11,11 @@ import smack.models.messages._
 import smack.models.structures.User
 import smack.common.mashallers.Marshalling
 
-class UserRoute(protected val backendRouter: ActorRef)(protected implicit val requestTimeout: Timeout)
-  extends RestRoute with Marshalling {
+class UserRoute(protected val backendRouter: ActorRef)(protected implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
 
   private val minUsernameLength = 6
 
-  override protected def internalRoute(implicit request: HttpRequest): Route =
+  override def route: Route =
     pathPrefix("users") {
       pathEndOrSingleSlash {
         get {
