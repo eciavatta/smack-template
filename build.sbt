@@ -5,37 +5,53 @@ val projectName = "smack-template"
 val projectVersion = "0.2.0-SNAPSHOT"
 val projectOrganization = "it.eciavatta"
 
-val akkaVersion = "2.5.13"
+val akkaVersion = "2.5.14"
 val akkaHttpVersion = "10.1.3"
 
 // Managed dependencies
 lazy val dependencies = Seq(
-  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-  "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
-  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-  "com.typesafe.akka" %% "akka-remote" % akkaVersion,
-  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-  "com.sclasen" %% "akka-zk-cluster-seed" % "0.1.10" exclude("com.typesafe", "ssl-config-core_2.12")
-    exclude("com.typesafe.akka", "akka-actor_2.12") exclude("com.typesafe.akka", "akka-cluster_2.12")
-    exclude("com.typesafe.akka", "akka-protobuf_2.12") exclude("com.typesafe.akka", "akka-remote_2.12")
-    exclude("com.typesafe.akka", "akka-stream_2.12") exclude("io.netty", "netty") exclude("org.slf4j", "slf4j-api")
-    exclude("org.apache.zookeeper", "zookeeper"),
-  "com.typesafe.akka" %% "akka-stream-kafka" % "0.22" exclude("org.apache.kafka", "kafka-clients")
-    exclude("org.lz4", "lz4-java") exclude("org.xerial.snappy", "snappy-java"),
-  "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "0.20" exclude("com.google.guava", "guava"),
-  "com.typesafe.akka" %% "akka-cluster-metrics" % "2.5.13",
-  "org.scalacheck" %% "scalacheck" % "1.14.0",
-  "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
-  "org.scalatest" %% "scalatest" % "3.0.5" % Test,
-  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
-  "io.sentry" % "sentry" % "1.7.5" exclude("org.slf4j", "slf4j-api") exclude("com.fasterxml.jackson.core", "jackson-core"),
-  "io.kamon" %% "kamon-akka-remote-2.5" % "1.1.0" exclude("com.lihaoyi", "sourcecode_2.12")
-    exclude("com.typesafe", "config"),
-  "io.kamon" %% "kamon-executors" % "1.0.1" exclude("io.kamon", "kamon-core_2.12"),
-  "io.kamon" %% "kamon-datadog" % "1.0.0" exclude("io.kamon", "kamon-core_2.12"),
+  // project direct dependencies
+  "com.datastax.cassandra" % "cassandra-driver-core" % "3.5.1" exclude("com.google.guava", "guava"),
   "com.github.scopt" %% "scopt" % "3.7.0",
-  "net.manub" %% "scalatest-embedded-kafka" % "1.1.1" exclude("org.slf4j", "slf4j-api"),
-  "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test
+  "com.sclasen" %% "akka-zk-cluster-seed" % "0.1.10" exclude("com.google.guava", "guava") exclude("com.typesafe", "ssl-config-core_2.12")
+    exclude("com.typesafe.akka", "akka-actor_2.12") exclude("com.typesafe.akka", "akka-cluster_2.12") exclude("com.typesafe.akka", "akka-protobuf_2.12")
+    exclude("com.typesafe.akka", "akka-remote_2.12") exclude("com.typesafe.akka", "akka-stream_2.12") exclude("io.netty", "netty")
+    exclude("org.slf4j", "slf4j-api"),
+  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+  "com.typesafe.akka" %% "akka-cluster" % akkaVersion exclude("com.typesafe", "config"),
+  "com.typesafe.akka" %% "akka-cluster-metrics" % akkaVersion exclude("com.typesafe", "config"),
+  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-remote" % akkaVersion exclude("com.typesafe", "config"),
+  "com.typesafe.akka" %% "akka-stream" % akkaVersion exclude("com.typesafe", "config"),
+  "com.typesafe.akka" %% "akka-stream-kafka" % "0.22" exclude("com.typesafe", "config") exclude("com.typesafe.akka", "akka-actor_2.12")
+    exclude("com.typesafe.akka", "akka-protobuf_2.12") exclude("com.typesafe.akka", "akka-stream_2.12") exclude("org.apache.kafka", "kafka-clients"),
+  "io.kamon" %% "kamon-akka-remote-2.5" % "1.1.0" exclude("com.lihaoyi", "sourcecode_2.12") exclude("com.typesafe", "config")
+    exclude("com.typesafe.akka", "akka-actor_2.12") exclude("com.typesafe.akka", "akka-cluster_2.12") exclude("com.typesafe.akka", "akka-protobuf_2.12")
+    exclude("com.typesafe.akka", "akka-remote_2.12") exclude("com.typesafe.akka", "akka-stream_2.12"),
+  "io.kamon" %% "kamon-datadog" % "1.0.0" exclude("com.typesafe", "config") exclude("io.kamon", "kamon-core_2.12"),
+  "io.kamon" %% "kamon-executors" % "1.0.1" exclude("com.typesafe", "config") exclude("com.lihaoyi", "sourcecode_2.12"),
+  "io.sentry" % "sentry" % "1.7.5" exclude("org.slf4j", "slf4j-api") exclude("com.fasterxml.jackson.core", "jackson-core"),
+
+  // project test dependencies
+  "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test exclude("com.typesafe", "config"),
+  "net.manub" %% "scalatest-embedded-kafka" % "1.1.1" % Test exclude("org.slf4j", "slf4j-api") exclude("org.xerial.snappy", "snappy-java")
+    exclude("org.apache.zookeeper", "zookeeper") exclude("org.codehaus.jackson", "jackson-core-asl") exclude("org.codehaus.jackson", "jackson-mapper-asl")
+    exclude("org.lz4", "lz4-java"),
+  "org.cassandraunit" % "cassandra-unit" % "3.5.0.1" % Test exclude("ch.qos.logback", "logback-classic") exclude("ch.qos.logback", "logback-core")
+    exclude("com.google.guava", "guava") exclude("io.dropwizard.metrics", "metrics-core") exclude("org.xerial.snappy", "snappy-java")
+    exclude("io.netty", "netty-buffer") exclude("io.netty", "netty-codec") exclude("io.netty", "netty-common") exclude("io.netty", "netty-handler")
+    exclude("io.netty", "netty-transport") exclude("org.ow2.asm", "asm") exclude("org.slf4j", "slf4j-api"),
+  "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
+  "org.scalatest" %% "scalatest" % "3.0.5" % Test,
+
+  // project compile dependencies
+  "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
+
+  // project transitive dependencies
+  "com.fasterxml.jackson.core" % "jackson-core" % "2.9.6",
+  "com.google.guava" % "guava" % "21.0",
+  "org.apache.kafka" % "kafka-clients" % "1.1.1"
 )
 
 // add scalastyle to compile task
@@ -127,4 +143,3 @@ val aopMerge: MergeStrategy = new MergeStrategy {
     Right(Seq(file -> path))
   }
 }
-
