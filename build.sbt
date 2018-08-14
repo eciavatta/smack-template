@@ -38,10 +38,6 @@ lazy val dependencies = Seq(
   "net.manub" %% "scalatest-embedded-kafka" % "1.1.1" % Test exclude("org.slf4j", "slf4j-api") exclude("org.xerial.snappy", "snappy-java")
     exclude("org.apache.zookeeper", "zookeeper") exclude("org.codehaus.jackson", "jackson-core-asl") exclude("org.codehaus.jackson", "jackson-mapper-asl")
     exclude("org.lz4", "lz4-java"),
-  "org.cassandraunit" % "cassandra-unit" % "3.5.0.1" % Test exclude("ch.qos.logback", "logback-classic") exclude("ch.qos.logback", "logback-core")
-    exclude("com.google.guava", "guava") exclude("io.dropwizard.metrics", "metrics-core") exclude("org.xerial.snappy", "snappy-java")
-    exclude("io.netty", "netty-buffer") exclude("io.netty", "netty-codec") exclude("io.netty", "netty-common") exclude("io.netty", "netty-handler")
-    exclude("io.netty", "netty-transport") exclude("org.ow2.asm", "asm") exclude("org.slf4j", "slf4j-api"),
   "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
   "org.scalatest" %% "scalatest" % "3.0.5" % Test,
 

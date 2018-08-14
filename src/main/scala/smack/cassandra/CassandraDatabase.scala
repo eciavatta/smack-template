@@ -11,12 +11,12 @@ import smack.cassandra.ScalaConverters._
 import smack.common.traits.{AskTimeout, ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
 import smack.models.TestException
 import smack.models.messages.GenerateException
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-class CassandraDatabase(keySpace: String, cassandraPort: Option[Int] = None) extends Actor
+class CassandraDatabase(keySpace: String) extends Actor
   with ImplicitMaterializer with ImplicitSerialization with AskTimeout with ContextDispatcher {
 
   private val log = Logging(context.system, context.self)
@@ -24,7 +24,7 @@ class CassandraDatabase(keySpace: String, cassandraPort: Option[Int] = None) ext
 
   private val cassandraCluster: Cluster = Cluster.builder
     .addContactPoint(config.getString("contact-point.host"))
-    .withPort(cassandraPort.fold(config.getInt("contact-point.port"))(port => port))
+    .withPort(config.getInt("contact-point.port"))
     .build()
 
   private implicit var cassandraSession: Session = _
@@ -89,9 +89,6 @@ object CassandraDatabase {
 
   def props(keySpace: String): Props = Props(new CassandraDatabase(keySpace))
   def name(keySpace: String): String = s"cassandraDatabase-$keySpace"
-
-  // for testing purpose
-  private[cassandra] def props(keySpace: String, port: Int): Props = Props(new CassandraDatabase(keySpace, Some(port)))
 
   sealed trait CassandraMessage
 
