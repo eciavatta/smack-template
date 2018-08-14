@@ -1,22 +1,25 @@
 language: scala
-jdk: oraclejdk8
 scala:
-- 2.12.6
+  - 2.12.6
+jdk: oraclejdk8
+
 sudo: false
+services:
+  - docker
+
+# default script for jobs, that do not have any specified
+script:
+  - docker-compose up
+  - sbt test
+
+after_failure:
+  - docker-compose logs
+
+before_cache:
+  - find $HOME/.ivy2 -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt  -name "*.lock"               -print -delete
+
 cache:
   directories:
   - $HOME/.ivy2/cache
   - $HOME/.sbt/boot/
-
-addons:
-  apt:
-    packages:
-    - oracle-java8-installer
-
-before_install:
-- sudo update-java-alternatives -s java-8-oracle
-- export JAVA_HOME=/usr/lib/jvm/java-8-oracle
-- java -version
-- sudo rm -rf /var/lib/cassandra/*
-- wget http://www-us.apache.org/dist/cassandra/3.11.3/apache-cassandra-3.11.3-bin.tar.gz && tar -xzf apache-cassandra-3.11.3-bin.tar.gz
-- sudo sh ./apache-cassandra-3.11.3/bin/cassandra -R
