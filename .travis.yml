@@ -9,7 +9,7 @@ services:
 
 # default script for jobs, that do not have any specified
 script:
-  - docker-compose up
+  - docker-compose up -d
   - sbt test
 
 after_failure:
