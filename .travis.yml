@@ -1,6 +1,8 @@
 language: scala
+jdk: oraclejdk8
 scala:
 - 2.12.6
+sudo: false
 cache:
   directories:
   - $HOME/.ivy2/cache
@@ -15,7 +17,8 @@ before_install:
 - sudo update-java-alternatives -s java-8-oracle
 - export JAVA_HOME=/usr/lib/jvm/java-8-oracle
 - java -version
-- sudo rm -rf /var/lib/cassandra/*
-- wget http://www.us.apache.org/dist/cassandra/3.3/apache-cassandra-3.3-bin.tar.gz && tar -xvzf apache-cassandra-3.3-bin.tar.gz
-- sudo sh ./apache-cassandra-3.3/bin/cassandra -R
+- rm -rf /var/lib/cassandra/*
+- wget http://www-us.apache.org/dist/cassandra/3.11.3/apache-cassandra-3.11.3-bin.tar.gz && tar -xzf apache-cassandra-3.11.3-bin.tar.gz
+- ./apache-cassandra-3.11.3/bin/cassandra
 - sleep 20
+
