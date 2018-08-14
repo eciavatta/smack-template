@@ -40,7 +40,8 @@ class KafkaProducer(topic: String, kafkaPort: Option[Int] = None)
   }
 
   override def postStop(): Unit = {
-    queue.watchCompletion() map (_ => kafkaProducer.close())
+    queue.complete()
+    kafkaProducer.close()
   }
 
   override def receive: Receive = {

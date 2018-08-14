@@ -5,7 +5,6 @@ import java.nio.ByteBuffer
 import akka.Done
 import akka.actor.{Actor, ActorRef, Props}
 import akka.event.Logging
-import akka.kafka.ConsumerMessage.CommittableOffsetBatch
 import akka.kafka.scaladsl.Consumer
 import akka.kafka.{ConsumerMessage, ConsumerSettings, Subscriptions}
 import akka.pattern.ask
@@ -29,7 +28,7 @@ class KafkaConsumer(topic: String, group: String, consumingActor: ActorRef, kafk
                                  .withBootstrapServers(kafkaPort.fold(config.getString("bootstrap-server"))(port => s"127.0.0.1:$port"))
                                  .withGroupId(group)
                                  .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-  var consumerControl: Consumer.Control = _
+  private var consumerControl: Consumer.Control = _
 
   override def preStart(): Unit = {
     consumerControl = createConsumerGraph().run()
@@ -65,16 +64,14 @@ class KafkaConsumer(topic: String, group: String, consumingActor: ActorRef, kafk
     (consumingActor ? pair._1).mapTo[Try[Done]] filter (_.isSuccess) map (_ => pair._2)
   }
 
-  private def batch = Flow[ConsumerMessage.CommittableOffset].batch(config.getInt("batch-max"), CommittableOffsetBatch.apply)(_.updated(_))
-
-  private def commitOffset = Flow[ConsumerMessage.CommittableOffsetBatch].mapAsync(config.getInt("commit-message-parallelism"))(_.commitScaladsl())
+  private def commitOffset = Flow[ConsumerMessage.CommittableOffset].mapAsync(config.getInt("commit-message-parallelism"))(_.commitScaladsl())
 
   private def createConsumerGraph(): RunnableGraph[Consumer.Control] = RunnableGraph.fromGraph({
     GraphDSL.create(consumerSource) {
       implicit builder => sourceShape =>
         import GraphDSL.Implicits._
 
-        sourceShape ~> watchTermination ~> deserialize ~> filterSerializable ~> consumeMessage ~> batch ~> commitOffset ~> Sink.ignore
+        sourceShape ~> watchTermination ~> deserialize ~> filterSerializable ~> consumeMessage ~> commitOffset ~> Sink.ignore
         ClosedShape
     }
   })

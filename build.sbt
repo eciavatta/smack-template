@@ -56,6 +56,7 @@ lazy val dependencies = Seq(
 
 // add scalastyle to compile task
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
+coverageEnabled := true
 
 lazy val root = Project(
   id = projectName,

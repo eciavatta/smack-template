@@ -14,3 +14,6 @@ addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.9.0")
 
 // Visualize project's dependencies
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.9.1")
+
+// Integrates the scoverage code coverage library
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")
