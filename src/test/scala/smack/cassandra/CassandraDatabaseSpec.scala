@@ -45,7 +45,7 @@ class CassandraDatabaseSpec extends TestKitBase with WordSpecLike with BeforeAnd
 
   protected override def afterAll(): Unit = {
     session.execute(s"DROP KEYSPACE IF EXISTS $keySpaceName;")
-    Await.result(system.terminate(), 15.seconds)
+    shutdown()
   }
 
   def createTable(tableName: String): ResultSet = session.execute(

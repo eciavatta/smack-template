@@ -7,7 +7,7 @@ object TestKitUtils {
   val config: Config = ConfigFactory.parseString("""
     akka {
       actor.ask.timeout = 3 s
-      loglevel = "INFO"
+      loglevel = "DEBUG"
     }
     """).withFallback(ConfigFactory.load("serialization"))
 

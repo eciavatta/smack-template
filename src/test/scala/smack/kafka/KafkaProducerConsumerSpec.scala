@@ -9,47 +9,50 @@ import akka.testkit.{DefaultTimeout, ImplicitSender, TestKitBase, TestProbe}
 import com.typesafe.config.{Config, ConfigFactory}
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.apache.kafka.common.serialization._
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import smack.common.utils.TestKitUtils
 import smack.models.messages.{GenerateException, TestRequest}
 import smack.models.{SerializationException, TestException}
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
-  with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender with DefaultTimeout {
+  with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with ImplicitSender with DefaultTimeout {
 
   implicit lazy val system: ActorSystem = ActorSystem("kafkaProducerConsumerSpec", actorConfig)
   lazy val actorConfig: Config = TestKitUtils.config.withFallback(ConfigFactory.load("kafka-producer")
     .withFallback(ConfigFactory.load("kafka-consumer")))
 
-  val messageValue = "testingMessage"
-  val testingPort = 6001
-  val consumerGroup = "group1"
+  val consumerGroup = "embedded-kafka-spec"
+  val topic = "test"
+  val partition = 0
+  val zookeeperPort = 2181
+  val kafkaPort = 9092
 
   implicit lazy val keySerializer: Serializer[String] = new StringSerializer
   implicit lazy val valueSerializer: Serializer[ByteBuffer] = new ByteBufferSerializer
   implicit lazy val keyDeserializer: Deserializer[String] = new StringDeserializer
   implicit lazy val valueDeserializer: Deserializer[ByteBuffer] = new ByteBufferDeserializer
   implicit lazy val serialization: Serialization = SerializationExtension(system)
-  implicit val kafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(zooKeeperPort = 0, kafkaPort = testingPort)
-
-  protected override def beforeAll(): Unit = {
-    EmbeddedKafka.start()
-  }
+  implicit val kafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(kafkaPort, zookeeperPort)
 
   protected override def afterAll(): Unit = {
-    EmbeddedKafka.stop()
-    Await.result(system.terminate(), 15.seconds)
+    shutdown()
   }
 
-  "kafka producer actor" should {
+  protected override def afterEach(): Unit = {
+    Try {
+      consumeNumberMessagesFromTopics[ByteBuffer](Set(topic), number = 3, autoCommit = true, 500.millis, resetTimeoutOnEachMessage = false) // clean topic
+    }
+  }
 
-    "serialize messages correctly" in {
-      val serializableMessage = TestRequest(messageValue)
-      val unSerializableMessage = NonSerializableMessage(messageValue)
+  "protobuf serialization" should {
+
+    "serialize and deserialize messages" in {
+      val messageText = "de-serialize test"
+      val serializableMessage = TestRequest(messageText)
+      val unSerializableMessage = NonSerializableMessage(messageText)
 
       val serializationResult = ProtobufSerialization.serializeMessage(serializableMessage)
       serializationResult.isSuccess shouldBe true
@@ -61,35 +64,39 @@ class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
       unSerializationResult.isSuccess shouldBe false
     }
 
-    "report a serializable message" in {
-      val kafkaProducerRef = system.actorOf(KafkaProducer.props("producer1", testingPort), "producer1")
-      val successMessage = TestRequest(messageValue)
+  }
+
+  "kafka producer actor" should {
+
+    "log a serializable message" in {
+      val kafkaProducerRef = system.actorOf(KafkaProducer.props(topic, partition), "producer1")
+      val successMessage = TestRequest("success producer message")
 
       kafkaProducerRef ! successMessage
       expectMsg(Success(Done))
 
-      val (key, value) = consumeFirstKeyedMessageFrom[String, ByteBuffer]("producer1")
+      val (key, value) = consumeFirstKeyedMessageFrom[String, ByteBuffer](topic)
       ProtobufSerialization.deserializeMessage(key, value) shouldBe Success(successMessage)
     }
 
     "fail if message is not serializable" in {
-      val kafkaProducerRef = system.actorOf(KafkaProducer.props("producer2", testingPort), "producer2")
-      val unSerializableMessage = NonSerializableMessage(messageValue)
+      val kafkaProducerRef = system.actorOf(KafkaProducer.props(topic, partition), "producer2")
+      val unSerializableMessage = NonSerializableMessage("non serializable producer message")
 
       kafkaProducerRef ! unSerializableMessage
       expectMsg(Failure(SerializationException))
     }
 
     "restart when exception occurs" in {
-      val kafkaProducerRef = system.actorOf(KafkaProducer.props("producer3", testingPort), "producer3")
-      val testMessage = TestRequest(messageValue)
+      val kafkaProducerRef = system.actorOf(KafkaProducer.props(topic, partition), "producer3")
+      val restartMessage = TestRequest("success producer message after restart")
 
       kafkaProducerRef ! GenerateException("kafka producer exception test")
-      kafkaProducerRef ! testMessage
+      kafkaProducerRef ! restartMessage
 
-      expectMsg(15.seconds, Success(Done))
-      val (key, value) = consumeFirstKeyedMessageFrom[String, ByteBuffer]("producer3")
-      ProtobufSerialization.deserializeMessage(key, value) shouldBe Success(testMessage)
+      expectMsg(Success(Done))
+      val (key, value) = consumeFirstKeyedMessageFrom[String, ByteBuffer](topic)
+      ProtobufSerialization.deserializeMessage(key, value) shouldBe Success(restartMessage)
     }
 
   }
@@ -98,50 +105,51 @@ class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
 
     "consume serializable messages" in {
       val messagesConsumerProbe = TestProbe()
-      system.actorOf(KafkaConsumer.props("consumer1", consumerGroup, messagesConsumerProbe.ref, testingPort), "consumer1")
-      val testMessage = TestRequest(messageValue)
+      system.actorOf(KafkaConsumer.props(topic, consumerGroup, messagesConsumerProbe.ref), "consumer1")
+      val successMessage = TestRequest("success consumer message")
 
-      val testMessageSerialized = ProtobufSerialization.serializeMessage(testMessage)
-      testMessageSerialized.isSuccess shouldBe true
+      val successMessageSerialized = ProtobufSerialization.serializeMessage(successMessage)
+      successMessageSerialized.isSuccess shouldBe true
 
-      publishToKafka("consumer1", testMessage.getClass.getName, testMessageSerialized.get)
-      messagesConsumerProbe.expectMsg(testMessage)
+      publishToKafka(topic, successMessage.getClass.getName, successMessageSerialized.get)
+      messagesConsumerProbe.expectMsg(successMessage)
       messagesConsumerProbe.reply(Try(Done))
     }
 
     "fail when consuming un-serializable message" in {
       val messagesConsumerProbe = TestProbe()
-      system.actorOf(KafkaConsumer.props("consumer2", consumerGroup, messagesConsumerProbe.ref, testingPort), "consumer2")
+      system.actorOf(KafkaConsumer.props(topic, consumerGroup, messagesConsumerProbe.ref), "consumer2")
 
-      publishToKafka("consumer1", NonSerializableMessage.getClass.getName, ByteBuffer.wrap(Array.emptyByteArray))
+      publishToKafka(topic, NonSerializableMessage.getClass.getName, ByteBuffer.wrap(Array.emptyByteArray))
       messagesConsumerProbe.expectNoMessage()
     }
 
     "skip committing if fail to process message" in {
       val messagesConsumerProbe = TestProbe()
-      system.actorOf(KafkaConsumer.props("consumer3", consumerGroup, messagesConsumerProbe.ref, testingPort), "consumer3")
-      val testMessage = TestRequest(messageValue)
+      system.actorOf(KafkaConsumer.props(topic, consumerGroup, messagesConsumerProbe.ref), "consumer3")
+      val skipMessage = TestRequest("skip consumer message")
 
-      val testMessageSerialized = ProtobufSerialization.serializeMessage(testMessage)
-      testMessageSerialized.isSuccess shouldBe true
+      val skipMessageSerialized = ProtobufSerialization.serializeMessage(skipMessage)
+      skipMessageSerialized.isSuccess shouldBe true
 
-      publishToKafka("consumer3", testMessage.getClass.getName, testMessageSerialized.get)
-      messagesConsumerProbe.expectMsg(testMessage)
+      publishToKafka(topic, skipMessage.getClass.getName, skipMessageSerialized.get)
+      messagesConsumerProbe.expectMsg(skipMessage)
       messagesConsumerProbe.reply(Failure(TestException("Fail to process message")))
+
     }
 
     "restart if an exception occurs" in {
       val messagesConsumerProbe = TestProbe()
-      val kafkaConsumerRef = system.actorOf(KafkaConsumer.props("consumer4", consumerGroup, messagesConsumerProbe.ref, testingPort), "consumer4")
-      val testMessage = TestRequest(messageValue)
+      val kafkaConsumerRef = system.actorOf(KafkaConsumer.props(topic, consumerGroup, messagesConsumerProbe.ref), "consumer4")
+      val restartMessage = TestRequest("success consumer message after restart")
 
-      val testMessageSerialized = ProtobufSerialization.serializeMessage(testMessage)
-      testMessageSerialized.isSuccess shouldBe true
+      val restartMessageSerialized = ProtobufSerialization.serializeMessage(restartMessage)
+      restartMessageSerialized.isSuccess shouldBe true
 
       kafkaConsumerRef ! GenerateException("kafka consumer exception test")
-      publishToKafka("consumer4", testMessage.getClass.getName, testMessageSerialized.get)
+      publishToKafka(topic, restartMessage.getClass.getName, restartMessageSerialized.get)
 
-      messagesConsumerProbe.expectMsg(15.seconds, testMessage)
+      messagesConsumerProbe.expectMsg(restartMessage)
       messagesConsumerProbe.reply(Try(Done))
     }
 

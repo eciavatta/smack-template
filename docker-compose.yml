@@ -5,6 +5,26 @@
 version: '2'
 services:
   cassandra:
-    image: cassandra:3.0.15
+    image: cassandra:3
+    restart: on-failure
     ports:
-    - "9042:9042"
+      - "9042:9042"
+
+  kafka:
+    image: wurstmeister/kafka:2.11-2.0.0
+    restart: on-failure
+    ports:
+      - "9092:9092"
+    depends_on:
+      - "zookeeper"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: "127.0.0.1"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181/kafka"
+    links:
+      - "zookeeper"
+
+  zookeeper:
+    image: zookeeper:3.5
+    restart: on-failure
+    ports:
+      - "2181:2181"

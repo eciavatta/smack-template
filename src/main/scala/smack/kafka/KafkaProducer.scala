@@ -22,7 +22,7 @@ import smack.models.{SerializationException, TestException}
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-class KafkaProducer(topic: String, kafkaPort: Option[Int] = None)
+class KafkaProducer(topic: String, partition: Int)
   extends Actor with ImplicitMaterializer with ImplicitSerialization with ContextDispatcher {
 
   private val log = Logging(context.system, context.self)
@@ -30,7 +30,7 @@ class KafkaProducer(topic: String, kafkaPort: Option[Int] = None)
 
   private val producerSettings: ProducerSettings[String, ByteBuffer] =
     ProducerSettings(config, new StringSerializer, new ByteBufferSerializer)
-      .withBootstrapServers(kafkaPort.fold(config.getString("bootstrap-server"))(port => s"127.0.0.1:$port"))
+      .withBootstrapServers(config.getString("bootstrap-server"))
   private var kafkaProducer: producer.KafkaProducer[String, ByteBuffer] = _
   private var queue: SourceQueueWithComplete[KafkaMessage] = _
 
@@ -47,7 +47,7 @@ class KafkaProducer(topic: String, kafkaPort: Option[Int] = None)
   override def receive: Receive = {
     case ex: GenerateException => throw TestException(ex.message)
     case message: AnyRef =>
-      queue.offer(KafkaMessage(topic = topic, key = message.getClass.getName, value = message, sender = sender())).map {
+      queue.offer(KafkaMessage(topic = topic, partition = partition, key = message.getClass.getName, value = message, sender = sender())).map {
         case QueueOfferResult.Enqueued => log.debug(s"Kafka message of class ${message.getClass.getName} is enqueued")
         case QueueOfferResult.Dropped => log.warning(s"Kafka message of class ${message.getClass.getName} is dropped")
         case QueueOfferResult.Failure(ex) => log.error(ex, s"Error after enqueuing message of class ${message.getClass.getName}")
@@ -109,13 +109,10 @@ class KafkaProducer(topic: String, kafkaPort: Option[Int] = None)
 
 object KafkaProducer {
 
-  def props(topic: String): Props = Props(new KafkaProducer(topic))
+  def props(topic: String, partition: Int): Props = Props(new KafkaProducer(topic, partition))
   def name: String = "kafkaProducer"
 
-  // for testing purpose
-  private[kafka] def props(topic: String, port: Int): Props = Props(new KafkaProducer(topic, Some(port)))
-
-  private[kafka] case class KafkaMessage(topic: String, partition: Int = 0, key: String, value: AnyRef, sender: ActorRef)
+  private[kafka] case class KafkaMessage(topic: String, partition: Int, key: String, value: AnyRef, sender: ActorRef)
 
   private[kafka] trait KafkaResult
   private[kafka] case class SingleKafkaResult(topic: String, partition: Int, offset: Option[Long],

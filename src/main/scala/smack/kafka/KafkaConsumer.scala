@@ -83,8 +83,4 @@ object KafkaConsumer {
   def props(topic: String, group: String, consumingActor: ActorRef): Props = Props(new KafkaConsumer(topic, group, consumingActor))
   def name: String = "kafkaConsumer"
 
-  // for testing purpose
-  private[kafka] def props(topic: String, group: String, consumingActor: ActorRef, port: Int): Props =
-    Props(new KafkaConsumer(topic, group, consumingActor, Some(port)))
-
 }
