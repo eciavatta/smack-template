@@ -9,6 +9,7 @@ import com.datastax.driver.core.{Cluster, ResultSet, Session, Statement}
 import smack.cassandra.CassandraDatabase._
 import smack.cassandra.ScalaConverters._
 import smack.common.traits.{AskTimeout, ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
+import smack.common.utils.Helpers
 import smack.models.TestException
 import smack.models.messages.GenerateException
 
@@ -20,7 +21,7 @@ class CassandraDatabase(keySpace: String) extends Actor
   with ImplicitMaterializer with ImplicitSerialization with AskTimeout with ContextDispatcher {
 
   private val log = Logging(context.system, context.self)
-  private val config = context.system.settings.config.getConfig("smack.cassandra")
+  private val config = Helpers.actorConfig.getConfig("smack.cassandra")
 
   private val cassandraCluster: Cluster = Cluster.builder
     .addContactPoint(config.getString("contact-point.host"))

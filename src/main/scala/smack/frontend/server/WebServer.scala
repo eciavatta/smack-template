@@ -26,7 +26,7 @@ class WebServer(private val system: ActorSystem, private val config: Config) {
   private implicit val materializer: ActorMaterializer = ActorMaterializer()
   private implicit val ec: ExecutionContext = system.dispatcher
 
-  private val logger = Logging(system, config.getString("name"))
+  private val logger = Logging(system, config.getString("smack.name"))
   private val host: String = config.getString("akka.http.server.host")
   private val port: Int = config.getInt("akka.http.server.port")
   private var binding: Future[Http.ServerBinding] = Future.never

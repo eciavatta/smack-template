@@ -12,7 +12,7 @@ class SentryLogger extends Actor {
   import System._
 
   private var sentry: SentryClient = _
-  private val config = context.system.settings.config
+  private val config = Helpers.actorConfig
   private val version = s"${BuildInfo.name}-${BuildInfo.version}"
   private val environment = s"scalaVersion: ${BuildInfo.scalaVersion} - sbtVersion: ${BuildInfo.sbtVersion}"
   private val platform = s"${getProperty("os.name")}_${getProperty("os.version")} - ${getProperty("java.vendor")}_${getProperty("java.version")}"

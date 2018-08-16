@@ -14,6 +14,7 @@ import org.apache.kafka.clients.producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteBufferSerializer, StringSerializer}
 import smack.common.traits.{ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
+import smack.common.utils.Helpers
 import smack.kafka.KafkaProducer.KafkaMessage
 import smack.kafka.ProtobufSerialization.serializeMessage
 import smack.models.messages.GenerateException
@@ -26,10 +27,10 @@ class KafkaProducer(topic: String, partition: Int)
   extends Actor with ImplicitMaterializer with ImplicitSerialization with ContextDispatcher {
 
   private val log = Logging(context.system, context.self)
-  private val config = context.system.settings.config.getConfig("akka.kafka.producer")
+  private val config = Helpers.actorConfig.getConfig("smack.kafka.producer")
 
   private val producerSettings: ProducerSettings[String, ByteBuffer] =
-    ProducerSettings(config, new StringSerializer, new ByteBufferSerializer)
+    ProducerSettings(Helpers.actorConfig.getConfig("akka.kafka.producer"), new StringSerializer, new ByteBufferSerializer)
       .withBootstrapServers(config.getString("bootstrap-server"))
   private var kafkaProducer: producer.KafkaProducer[String, ByteBuffer] = _
   private var queue: SourceQueueWithComplete[KafkaMessage] = _
@@ -110,7 +111,7 @@ class KafkaProducer(topic: String, partition: Int)
 object KafkaProducer {
 
   def props(topic: String, partition: Int): Props = Props(new KafkaProducer(topic, partition))
-  def name: String = "kafkaProducer"
+  def name(topic: String, partition: Int): String = s"kafkaProducer-$topic-$partition"
 
   private[kafka] case class KafkaMessage(topic: String, partition: Int, key: String, value: AnyRef, sender: ActorRef)
 

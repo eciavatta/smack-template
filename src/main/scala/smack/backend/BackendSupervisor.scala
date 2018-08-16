@@ -9,7 +9,7 @@ import smack.models.messages.TestRequest
 
 class BackendSupervisor extends Actor with ActorLogging {
 
-  private val kafkaProducer = context.actorOf(KafkaProducer.props("test", 0), KafkaProducer.name)
+  private val kafkaProducer = context.actorOf(KafkaProducer.props("test", 0), KafkaProducer.name("test", 0))
   private val userController = context.actorOf(UserController.props, UserController.name)
   private val testController = context.actorOf(TestController.props(kafkaProducer), TestController.name)
 

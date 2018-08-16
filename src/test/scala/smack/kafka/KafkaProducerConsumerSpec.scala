@@ -6,11 +6,10 @@ import akka.Done
 import akka.actor.ActorSystem
 import akka.serialization.{Serialization, SerializationExtension}
 import akka.testkit.{DefaultTimeout, ImplicitSender, TestKitBase, TestProbe}
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.apache.kafka.common.serialization._
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
-import smack.common.utils.TestKitUtils
 import smack.models.messages.{GenerateException, TestRequest}
 import smack.models.{SerializationException, TestException}
 
@@ -20,9 +19,7 @@ import scala.util.{Failure, Success, Try}
 class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
   with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with ImplicitSender with DefaultTimeout {
 
-  implicit lazy val system: ActorSystem = ActorSystem("kafkaProducerConsumerSpec", actorConfig)
-  lazy val actorConfig: Config = TestKitUtils.config.withFallback(ConfigFactory.load("kafka-producer")
-    .withFallback(ConfigFactory.load("kafka-consumer")))
+  implicit lazy val system: ActorSystem = ActorSystem("kafkaProducerConsumerSpec", ConfigFactory.load("test"))
 
   val consumerGroup = "embedded-kafka-spec"
   val topic = "test"

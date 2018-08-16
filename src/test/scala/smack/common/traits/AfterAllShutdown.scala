@@ -8,7 +8,7 @@ trait AfterAllShutdown extends BeforeAndAfterAll {
 
   protected override def afterAll(): Unit = {
     super.afterAll()
-    system.terminate()
+    shutdown()
   }
 
 }

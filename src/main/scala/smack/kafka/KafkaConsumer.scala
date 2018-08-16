@@ -13,6 +13,7 @@ import akka.stream.{AbruptStageTerminationException, ClosedShape}
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteBufferDeserializer, StringDeserializer}
 import smack.common.traits.{AskTimeout, ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
+import smack.common.utils.Helpers
 import smack.models.TestException
 import smack.models.messages.GenerateException
 
@@ -23,8 +24,8 @@ class KafkaConsumer(topic: String, group: String, consumingActor: ActorRef, kafk
 
   private val log = Logging(context.system, context.self)
 
-  private val config = context.system.settings.config.getConfig("akka.kafka.consumer")
-  private val consumerSettings = ConsumerSettings(config, new StringDeserializer, new ByteBufferDeserializer)
+  private val config = Helpers.actorConfig.getConfig("smack.kafka.consumer")
+  private val consumerSettings = ConsumerSettings(Helpers.actorConfig.getConfig("akka.kafka.consumer"), new StringDeserializer, new ByteBufferDeserializer)
                                  .withBootstrapServers(kafkaPort.fold(config.getString("bootstrap-server"))(port => s"127.0.0.1:$port"))
                                  .withGroupId(group)
                                  .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
@@ -81,6 +82,6 @@ class KafkaConsumer(topic: String, group: String, consumingActor: ActorRef, kafk
 object KafkaConsumer {
 
   def props(topic: String, group: String, consumingActor: ActorRef): Props = Props(new KafkaConsumer(topic, group, consumingActor))
-  def name: String = "kafkaConsumer"
+  def name(topic: String, group: String): String = s"kafkaConsumer-$topic-$group"
 
 }

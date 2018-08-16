@@ -8,7 +8,6 @@ import com.datastax.driver.core.{Cluster, ResultSet, Session}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import smack.cassandra.CassandraDatabase.{CassandraQuery, CassandraQueryMap, CassandraResult}
-import smack.common.utils.TestKitUtils
 import smack.models.messages.GenerateException
 
 import scala.collection.JavaConverters._
@@ -20,7 +19,7 @@ import scala.util.Try
 class CassandraDatabaseSpec extends TestKitBase with WordSpecLike with BeforeAndAfterAll with Matchers with ImplicitSender {
 
   implicit lazy val system: ActorSystem = ActorSystem("cassandraDatabaseSpec", config)
-  lazy val config: Config = TestKitUtils.config.withFallback(ConfigFactory.load("cassandra"))
+  lazy val config: Config = ConfigFactory.load("test")
 
   implicit lazy val session: Session = Cluster.builder
     .addContactPoint(config.getString("smack.cassandra.contact-point.host"))
