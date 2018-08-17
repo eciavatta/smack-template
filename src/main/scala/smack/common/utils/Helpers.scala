@@ -14,8 +14,11 @@ object Helpers {
   def isProductionEnvironment(implicit config: Config): Boolean = getEnvironment(config) == "production"
   def isProductionEnvironment(implicit context: ActorContext): Boolean = isProductionEnvironment(config(context))
 
-  def isDevelopmentEnvironment(implicit config: Config): Boolean = !isProductionEnvironment(config)
+  def isDevelopmentEnvironment(implicit config: Config): Boolean = getEnvironment(config) == "development"
   def isDevelopmentEnvironment(implicit context: ActorContext): Boolean = isDevelopmentEnvironment(config(context))
+
+  def isTestingEnvironment(implicit config: Config): Boolean = getEnvironment(config) == "testing"
+  def isTestingEnvironment(implicit context: ActorContext): Boolean = isTestingEnvironment(config(context))
 
   def isDebugEnabled(implicit config: Config): Boolean = root(config).getBoolean("smack.debug")
   def isDebugEnabled(implicit context: ActorContext): Boolean = isDebugEnabled(config(context))

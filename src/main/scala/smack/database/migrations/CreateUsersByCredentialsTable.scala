@@ -15,6 +15,6 @@ object CreateUsersByCredentialsTable extends Migration {
        |  PRIMARY KEY (email, password));
      """.stripMargin
 
-  override def down: String = s"DROP TABLE IF EXISTS credentials"
+  override def down: String = s"DROP TABLE IF EXISTS users_by_credentials"
 
 }
