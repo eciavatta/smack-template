@@ -1,29 +1,45 @@
 package smack.backend.controllers
 
-import akka.actor._
-import smack.common.utils.RestApiCodes
-import smack.models.messages._
-import smack.models.structures._
+import java.util.UUID
 
-class UserController extends Actor with ActorLogging {
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import com.datastax.driver.core.SimpleStatement
+import smack.common.traits.{AskTimeout, CassandraController, ContextDispatcher}
+import smack.common.utils.Responses
+import smack.models.messages.{FindUserRequest, FindUserResponse}
+import smack.models.structures.{Date, User}
 
-  private var users: Set[User] = Set()
+import scala.collection.JavaConverters._
+
+class UserController extends Actor with CassandraController with ActorLogging with AskTimeout with ContextDispatcher  {
 
   override def receive: Receive = {
-    case GetUsersRequest() =>
-      sender ! GetUsersResponse(RestApiCodes.OK, users.toList)
-    case GetUserRequest(id) =>
-      val user = users.find(u => u.id == id)
-      sender ! GetUserResponse(if (user.isDefined) RestApiCodes.OK else RestApiCodes.NotFound, user)
-    case CreateUserRequest(email, username, _) =>
-      val user = User(users.size, username, email, Some(Date(System.currentTimeMillis())))
-      users += user
-      sender ! CreateUserResponse(RestApiCodes.Created, Some(user))
-    case DeleteUserRequest(id) =>
-      val user = users.find(u => u.id == id)
-      sender ! DeleteUserResponse(user.fold(RestApiCodes.NotFound)(u => { users -= u; RestApiCodes.OK }))
-      DeleteUserRequest(id).toByteArray
+    case FindUserRequest(id) => parseUUID(id) match {
+      case Left(badRequest) => sender ! FindUserResponse(badRequest)
+      case Right(uuid) => findUser(uuid, sender)
+    }
+    // case CreateUserRequest(email, password, fullName) =>
+
   }
+
+  private def findUser(uuid: UUID, sender: ActorRef): Unit = executeStatement(sender,
+    new SimpleStatement("SELECT id, email, fullName, toTimestamp(id) as registered_date FROM users_by_id WHERE id = ?", uuid)) {
+      case Right(result) => result.all().asScala.headOption.fold(FindUserResponse(Responses.notFound())) { row =>
+        FindUserResponse(user = Some(User(
+          id = row.getString("id"),
+          email = row.getString("email"),
+          fullName = row.getString("full_name"),
+          registeredDate = Some(Date(row.getTimestamp("registered_date").getTime))
+        )))
+      }
+      case Left(serverError) => FindUserResponse(serverError)
+    }
+
+//  private def checkEmailAlreadyUsed(email: String, sender: ActorRef): Unit = executeStatement(sender,
+//    new SimpleStatement("SELECT COUNT(*) FROM users_by_credentials WHERE email = ?", email)) {
+//    case Right(result) =>
+//    case Left(serverError) => CreateUserResponse(serverError)
+//  }
 
 }
 

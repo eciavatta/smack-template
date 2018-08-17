@@ -2,16 +2,12 @@ package smack.backend
 
 import akka.actor.SupervisorStrategy.Resume
 import akka.actor.{Actor, ActorLogging, OneForOneStrategy, Props}
-import smack.backend.controllers.{TestController, UserController}
+import smack.backend.controllers.UserController
 import smack.common.serialization.MessageSerializer.UserRequest
-import smack.kafka.KafkaProducer
-import smack.models.messages.TestRequest
 
 class BackendSupervisor extends Actor with ActorLogging {
 
-  private val kafkaProducer = context.actorOf(KafkaProducer.props("test", 0), KafkaProducer.name("test", 0))
   private val userController = context.actorOf(UserController.props, UserController.name)
-  private val testController = context.actorOf(TestController.props(kafkaProducer), TestController.name)
 
   override def supervisorStrategy: OneForOneStrategy = OneForOneStrategy() {
     case _ => Resume
@@ -19,7 +15,6 @@ class BackendSupervisor extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case message: UserRequest => userController forward message
-    case test: TestRequest => testController forward test
   }
 
 }

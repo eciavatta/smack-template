@@ -6,9 +6,14 @@ import "structures.proto";
 
 package smack.models;
 
+// EXCEPTIONS
+
 message GenerateException {
     string message = 1;
 }
+
+
+// TESTS
 
 message TestRequest {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.RequestMessage";
@@ -17,50 +22,120 @@ message TestRequest {
 
 message TestResponse {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.ResponseMessage";
-    int32 statusCode = 1;
+    ResponseStatus responseStatus = 1;
     string value = 2;
 }
 
-message GetUsersRequest {
+
+// USERS
+
+message FindUserRequest {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserRequest";
+    string id = 1;
 }
 
-message GetUsersResponse {
+message FindUserResponse {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserResponse";
-    int32 statusCode = 1;
-    repeated User users = 2;
-}
-
-message GetUserRequest {
-    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserRequest";
-    int64 id = 1;
-}
-
-message GetUserResponse {
-    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserResponse";
-    int32 statusCode = 1;
+    ResponseStatus responseStatus = 1;
     User user = 2;
 }
 
 message CreateUserRequest {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserRequest";
     string email = 1;
-    string username = 2;
-    string password = 3;
+    string password = 2;
+    string fullName = 3;
 }
 
 message CreateUserResponse {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserResponse";
-    int32 statusCode = 1;
+    ResponseStatus responseStatus = 1;
     User user = 2;
 }
 
-message DeleteUserRequest {
+message UpdateUserRequest {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserRequest";
-    int64 id = 1;
+    string id = 1;
+    string fullName = 2;
 }
 
-message DeleteUserResponse {
+message UpdateUserResponse {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.UserResponse";
-    int32 statusCode = 1;
+    ResponseStatus responseStatus = 1;
+    User user = 2;
+}
+
+
+// SITES
+
+message ListSitesRequest {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteRequest";
+    string userId = 1;
+}
+
+message ListSitesResponse {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteResponse";
+    ResponseStatus responseStatus = 1;
+    repeated Site sites = 2;
+}
+
+message FindSiteRequest {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteRequest";
+    string id = 1;
+}
+
+message FindSiteResponse {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteResponse";
+    ResponseStatus responseStatus = 1;
+    Site site = 2;
+}
+
+message CreateSiteRequest {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteRequest";
+    string userId = 1;
+    string domain = 2;
+}
+
+message CreateSiteResponse {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteResponse";
+    ResponseStatus responseStatus = 1;
+    Site site = 2;
+}
+
+message UpdateSiteRequest {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteRequest";
+    string id = 1;
+    string domain = 2;
+}
+
+message UpdateSiteResponse {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteResponse";
+    ResponseStatus responseStatus = 1;
+    Site site = 2;
+}
+
+message DeleteSiteRequest {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteRequest";
+    string id = 1;
+}
+
+message DeleteSiteResponse {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteResponse";
+    ResponseStatus responseStatus = 1;
+}
+
+
+// LOGS
+
+message TraceLogRequest {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.RequestMessage";
+    string trackingId = 1;
+    string url = 2;
+    string ipAddress = 3;
+    string userAgent = 4;
+}
+
+message TraceLogResponse {
+    option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.ResponseMessage";
+    ResponseStatus responseStatus = 1;
 }

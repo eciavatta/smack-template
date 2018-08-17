@@ -7,9 +7,10 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 trait MessageMarshalling extends DefaultJsonProtocol {
   this: Marshalling =>
 
-  implicit val getUsersRequestFormat: RootJsonFormat[GetUsersRequest] = jsonFormat0(GetUsersRequest.apply)
-  implicit val getUsersResponseFormat: RootJsonFormat[GetUsersResponse] = jsonFormat2(GetUsersResponse.apply)
-  implicit val createUserFormat: RootJsonFormat[CreateUserRequest] = jsonFormat3(CreateUserRequest.apply)
   implicit val healthFormat: RootJsonFormat[HealthMessage] = jsonFormat6(HealthMessage.apply)
+
+  implicit val createUserRequestFormat: RootJsonFormat[CreateUserRequest] = jsonFormat3(CreateUserRequest.apply)
+  implicit val updateUserRequestFormat: RootJsonFormat[UpdateUserRequest] = jsonFormat2(UpdateUserRequest.apply)
+  implicit val createSiteRequestFormat: RootJsonFormat[CreateSiteRequest] = jsonFormat2(CreateSiteRequest.apply)
 
 }

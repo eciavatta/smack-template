@@ -7,21 +7,16 @@ import akka.util.Timeout
 import smack.common.mashallers.Marshalling
 import smack.frontend.server.RestRoute
 import smack.frontend.server.ValidationDirective._
-import smack.frontend.validation.ValidationRules._
 import smack.models.messages._
 
-class UserRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
-
-  private val minPasswordLength = 6
+class SiteRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
 
   override def route: Route =
-    pathPrefix("users") {
+    pathPrefix("sites") {
       pathEndOrSingleSlash {
         post {
-          entity(as[CreateUserRequest]) { user =>
-            validateModel(user, EmailRule("email"), StringLengthRule("password", minPasswordLength)) { req =>
-              handle(req, (res: CreateUserResponse) => res.user)
-            }
+          entity(as[CreateSiteRequest]) { req =>
+            handle(req, (res: CreateSiteResponse) => res.site)
           }
         }
       }

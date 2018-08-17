@@ -32,10 +32,12 @@ abstract class RestRoute {
 
   private def jsonResponse[N <: ResponseMessage]
   (responseMessage: ResponseMessage, responseMapping: N => ToResponseMarshallable): Route = {
-    val statusCode = StatusCodes.getForKey(responseMessage.statusCode)
+    val statusNum = responseMessage.responseStatus.fold(StatusCodes.InternalServerError.intValue)(_.statusCode)
+    val statusMessage = responseMessage.responseStatus.fold(Option.empty[String])(m => if (m.message.isEmpty) None else Some(m.message))
+    val statusCode = StatusCodes.getForKey(statusNum)
     mapResponse(res => res.copy(status = statusCode.getOrElse(StatusCodes.InternalServerError),
       entity = res.entity.withContentType(ContentTypes.`application/json`))) {
-      complete(responseMapping(responseMessage.asInstanceOf[N]))
+      complete(statusMessage.fold(responseMapping(responseMessage.asInstanceOf[N]))(m => m))
     }
   }
 }

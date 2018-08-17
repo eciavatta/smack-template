@@ -21,5 +21,6 @@ trait StructureMarshalling extends DefaultJsonProtocol {
   }
 
   implicit val userFormat: RootJsonFormat[User] = jsonFormat4(User.apply)
+  implicit val siteFormat: RootJsonFormat[Site] = jsonFormat4(Site.apply)
 
 }

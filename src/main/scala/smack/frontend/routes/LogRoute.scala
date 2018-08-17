@@ -10,7 +10,7 @@ import smack.frontend.server.ValidationDirective._
 import smack.frontend.validation.ValidationRules._
 import smack.models.messages._
 
-class UserRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
+class LogRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
 
   private val minPasswordLength = 6
 
