@@ -23,7 +23,7 @@ class UserController extends Actor with CassandraController with ActorLogging wi
   }
 
   private def findUser(uuid: UUID, sender: ActorRef): Unit = executeStatement(sender,
-    new SimpleStatement("SELECT id, email, fullName, toTimestamp(id) as registered_date FROM users_by_id WHERE id = ?", uuid)) {
+    new SimpleStatement("SELECT id, email, full_name, toTimestamp(id) as registered_date FROM users_by_id WHERE id = ?", uuid)) {
       case Right(result) => result.all().asScala.headOption.fold(FindUserResponse(Responses.notFound())) { row =>
         FindUserResponse(user = Some(User(
           id = row.getString("id"),

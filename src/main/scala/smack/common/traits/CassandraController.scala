@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.ask
 import com.datastax.driver.core.{ResultSet, Statement}
+import com.typesafe.config.Config
 import smack.cassandra.CassandraDatabase._
 import smack.common.serialization.MessageSerializer.ResponseMessage
 import smack.common.utils.{Helpers, Responses}
@@ -16,6 +17,7 @@ trait CassandraController {
   this: Actor with ActorLogging with AskTimeout with ContextDispatcher =>
 
   private val databaseRef = Helpers.createCassandraDatabaseActor()
+  private implicit val config: Config = Helpers.actorConfig
 
   protected def executeQuery(sender: ActorRef, query: String, values: Any*)
                             (onComplete: Either[Option[ResponseStatus], ResultSet] => ResponseMessage): Unit =
@@ -31,12 +33,12 @@ trait CassandraController {
 
   protected def parseUUID(uuid: String): Either[Option[ResponseStatus], UUID] = Try(UUID.fromString(uuid)) match {
     case Success(_uuid) => Right(_uuid)
-    case Failure(_) => Left(Responses.badRequest(Some("The id that has been searched is not a valid UUID")))
+    case Failure(_) => Left(Responses.badRequest(Helpers.getError("badUUID")))
   }
 
   private def sendCassandraMessage(sender: ActorRef, cassandraMessage: CassandraMessage)
                                   (onComplete: Either[Option[ResponseStatus], ResultSet] => ResponseMessage): Unit = {
-    (databaseRef ? cassandraMessage).mapTo[CassandraResult].onComplete {
+    databaseRef.ask(cassandraMessage).mapTo[CassandraResult].onComplete {
       case Success(CassandraResult(tryResult)) => tryResult match {
         case Success(result) => sender ! onComplete(Right(result))
         case Failure(ex) =>

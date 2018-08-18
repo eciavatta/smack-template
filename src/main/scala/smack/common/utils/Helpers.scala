@@ -6,28 +6,23 @@ import com.typesafe.config.Config
 import smack.cassandra.CassandraDatabase
 import smack.kafka.KafkaProducer
 
+import scala.util.Try
+
 object Helpers {
 
   def getEnvironment(implicit config: Config): String = root(config).getString("smack.environment")
-  def getEnvironment(implicit context: ActorContext): String = getEnvironment(config(context))
 
   def isProductionEnvironment(implicit config: Config): Boolean = getEnvironment(config) == "production"
-  def isProductionEnvironment(implicit context: ActorContext): Boolean = isProductionEnvironment(config(context))
 
   def isDevelopmentEnvironment(implicit config: Config): Boolean = getEnvironment(config) == "development"
-  def isDevelopmentEnvironment(implicit context: ActorContext): Boolean = isDevelopmentEnvironment(config(context))
 
   def isTestingEnvironment(implicit config: Config): Boolean = getEnvironment(config) == "testing"
-  def isTestingEnvironment(implicit context: ActorContext): Boolean = isTestingEnvironment(config(context))
 
   def isDebugEnabled(implicit config: Config): Boolean = root(config).getBoolean("smack.debug")
-  def isDebugEnabled(implicit context: ActorContext): Boolean = isDebugEnabled(config(context))
 
   def getApplicationName(implicit config: Config): String = root(config).getString("smack.name")
-  def getApplicationName(implicit context: ActorContext): String = getApplicationName(config(context))
 
   def getDateFormat(implicit config: Config): String = root(config).getString("smack.dateFormat")
-  def getDateFormat(implicit context: ActorContext): String = getDateFormat(config(context))
 
   def actorConfig(implicit context: ActorContext): Config = config(context)
 
@@ -39,8 +34,14 @@ object Helpers {
     context.actorOf(RoundRobinGroup(paths).props(), s"${topic}KafkaProducerRouter")
   }
 
+  def getLanguage(implicit config: Config): String = root(config).getString("smack.language")
+
+  def getString(key: String)(implicit config: Config): Option[String] = Try(root(config).getString(s"strings.$getLanguage.$key")).fold(_ => None, Some(_))
+
+  def getError(key: String)(implicit config: Config): Option[String] = getString(s"errors.$key")
+
   def createCassandraDatabaseActor()(implicit context: ActorContext): ActorRef = {
-    val keyspace = config(context).getString(s"smack.database.migrations.${getEnvironment(context)}.keyspaceName")
+    val keyspace = config(context).getString(s"smack.database.migrations.${getEnvironment(actorConfig(context))}.keyspaceName")
     context.actorOf(CassandraDatabase.props(keyspace), CassandraDatabase.name(keyspace))
   }
 

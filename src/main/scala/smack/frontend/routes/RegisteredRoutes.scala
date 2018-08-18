@@ -1,16 +1,16 @@
 package smack.frontend.routes
 
 import akka.actor.ActorRef
-import akka.util.Timeout
+import com.typesafe.config.Config
 import smack.frontend.server.RestRoute
 
 object RegisteredRoutes {
 
-  def getRegisteredRoutes(backendRouter: ActorRef)(implicit requestTimeout: Timeout): Seq[RestRoute] = Seq(
-    new UserRoute(backendRouter),
-    new SiteRoute(backendRouter),
-    new LogRoute(backendRouter),
-    new HealthRoute(backendRouter)
+  def getRegisteredRoutes(backendRouter: ActorRef)(implicit config: Config): Seq[RestRoute] = Seq(
+    UserRoute(backendRouter),
+    SiteRoute(backendRouter),
+    LogRoute(backendRouter),
+    HealthRoute(backendRouter)
   )
 
 }

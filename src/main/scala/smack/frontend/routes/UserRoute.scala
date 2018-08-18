@@ -3,14 +3,13 @@ package smack.frontend.routes
 import akka.actor.ActorRef
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
-import smack.common.mashallers.Marshalling
+import com.typesafe.config.Config
 import smack.frontend.server.RestRoute
 import smack.frontend.server.ValidationDirective._
 import smack.frontend.validation.ValidationRules._
 import smack.models.messages._
 
-class UserRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
+case class UserRoute(backendRouter: ActorRef)(implicit val config: Config) extends RestRoute {
 
   private val minPasswordLength = 6
 

@@ -9,7 +9,8 @@ import akka.testkit.{DefaultTimeout, ImplicitSender, TestKitBase, TestProbe}
 import com.typesafe.config.ConfigFactory
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.apache.kafka.common.serialization._
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
+import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpecLike}
+import smack.common.traits.AfterAllShutdown
 import smack.models.messages.{GenerateException, TestRequest}
 import smack.models.{SerializationException, TestException}
 
@@ -17,7 +18,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
-  with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with ImplicitSender with DefaultTimeout {
+  with WordSpecLike with Matchers with AfterAllShutdown with BeforeAndAfterEach with ImplicitSender with DefaultTimeout {
 
   implicit lazy val system: ActorSystem = ActorSystem("kafkaProducerConsumerSpec", ConfigFactory.load("test"))
 
@@ -33,10 +34,6 @@ class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
   implicit lazy val valueDeserializer: Deserializer[ByteBuffer] = new ByteBufferDeserializer
   implicit lazy val serialization: Serialization = SerializationExtension(system)
   implicit val kafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(kafkaPort, zookeeperPort)
-
-  protected override def afterAll(): Unit = {
-    shutdown()
-  }
 
   protected override def afterEach(): Unit = {
     Try {

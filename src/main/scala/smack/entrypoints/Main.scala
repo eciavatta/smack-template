@@ -29,7 +29,7 @@ object Main {
 
     params.role match {
       case "frontend" =>
-        val server = new WebServer(system, config)
+        val server = new WebServer(system)
         server.start()
 
         sys.addShutdownHook {

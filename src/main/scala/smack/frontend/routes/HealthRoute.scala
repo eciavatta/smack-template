@@ -7,12 +7,11 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
+import com.typesafe.config.Config
 import smack.frontend.server.RestRoute
 import smack.models.HealthMessage
-import smack.common.mashallers.Marshalling
 
-class HealthRoute(val backendRouter: ActorRef)(implicit val requestTimeout: Timeout) extends RestRoute with Marshalling {
+case class HealthRoute(backendRouter: ActorRef)(implicit val config: Config) extends RestRoute {
 
   override def route: Route =
     pathPrefix("health") {

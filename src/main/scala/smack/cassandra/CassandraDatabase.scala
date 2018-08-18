@@ -64,6 +64,7 @@ class CassandraDatabase(keySpace: String) extends Actor
       case CassandraQuery(query, values @ _*) => cassandraSession.prepareAsync(query).asScala
         .map(_.bind(values.map(_.asInstanceOf[AnyRef]): _*)).map(cassandraSession.execute(_))
       case CassandraQueryMap(query, values) => cassandraSession.executeAsync(query, values.mapValues(_.asInstanceOf[AnyRef]).asJava).asScala
+      case CassandraStatement(statement) => cassandraSession.executeAsync(statement).asScala
     }
 
     result.map(resultSet => (CassandraResult(Success(resultSet)), c._2)).recover {
