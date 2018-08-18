@@ -5,51 +5,6 @@ val projectName = "smack-template"
 val projectVersion = "0.2.0-SNAPSHOT"
 val projectOrganization = "it.eciavatta"
 
-val akkaVersion = "2.5.14"
-val akkaHttpVersion = "10.1.3"
-
-// Managed dependencies
-lazy val dependencies = Seq(
-  // project direct dependencies
-  "com.datastax.cassandra" % "cassandra-driver-core" % "3.5.1" exclude("com.google.guava", "guava"),
-  "com.github.scopt" %% "scopt" % "3.7.0",
-  "com.sclasen" %% "akka-zk-cluster-seed" % "0.1.10" exclude("com.google.guava", "guava") exclude("com.typesafe", "ssl-config-core_2.12")
-    exclude("com.typesafe.akka", "akka-actor_2.12") exclude("com.typesafe.akka", "akka-cluster_2.12") exclude("com.typesafe.akka", "akka-protobuf_2.12")
-    exclude("com.typesafe.akka", "akka-remote_2.12") exclude("com.typesafe.akka", "akka-stream_2.12") exclude("io.netty", "netty")
-    exclude("org.slf4j", "slf4j-api"),
-  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-  "com.typesafe.akka" %% "akka-cluster" % akkaVersion exclude("com.typesafe", "config"),
-  "com.typesafe.akka" %% "akka-cluster-metrics" % akkaVersion exclude("com.typesafe", "config"),
-  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
-  "com.typesafe.akka" %% "akka-remote" % akkaVersion exclude("com.typesafe", "config"),
-  "com.typesafe.akka" %% "akka-stream" % akkaVersion exclude("com.typesafe", "config"),
-  "com.typesafe.akka" %% "akka-stream-kafka" % "0.22" exclude("com.typesafe", "config") exclude("com.typesafe.akka", "akka-actor_2.12")
-    exclude("com.typesafe.akka", "akka-protobuf_2.12") exclude("com.typesafe.akka", "akka-stream_2.12") exclude("org.apache.kafka", "kafka-clients"),
-  "io.kamon" %% "kamon-akka-remote-2.5" % "1.1.0" exclude("com.lihaoyi", "sourcecode_2.12") exclude("com.typesafe", "config")
-    exclude("com.typesafe.akka", "akka-actor_2.12") exclude("com.typesafe.akka", "akka-cluster_2.12") exclude("com.typesafe.akka", "akka-protobuf_2.12")
-    exclude("com.typesafe.akka", "akka-remote_2.12") exclude("com.typesafe.akka", "akka-stream_2.12"),
-  "io.kamon" %% "kamon-datadog" % "1.0.0" exclude("com.typesafe", "config") exclude("io.kamon", "kamon-core_2.12"),
-  "io.kamon" %% "kamon-executors" % "1.0.1" exclude("com.typesafe", "config") exclude("com.lihaoyi", "sourcecode_2.12"),
-  "io.sentry" % "sentry" % "1.7.5" exclude("org.slf4j", "slf4j-api") exclude("com.fasterxml.jackson.core", "jackson-core"),
-
-  // project test dependencies
-  "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test exclude("com.typesafe", "config"),
-  "net.manub" %% "scalatest-embedded-kafka" % "1.1.1" % Test exclude("org.slf4j", "slf4j-api") exclude("org.xerial.snappy", "snappy-java")
-    exclude("org.apache.zookeeper", "zookeeper") exclude("org.codehaus.jackson", "jackson-core-asl") exclude("org.codehaus.jackson", "jackson-mapper-asl")
-    exclude("org.lz4", "lz4-java"),
-  "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
-  "org.scalatest" %% "scalatest" % "3.0.5" % Test,
-
-  // project compile dependencies
-  "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
-
-  // project transitive dependencies
-  "com.fasterxml.jackson.core" % "jackson-core" % "2.9.6",
-  "com.google.guava" % "guava" % "21.0",
-  "org.apache.kafka" % "kafka-clients" % "1.1.1"
-)
-
 // add scalastyle to compile task
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
 coverageEnabled := true
@@ -74,7 +29,7 @@ lazy val root = Project(
     parallelExecution in Test := false,
     scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
     updateOptions := updateOptions.value.withCachedResolution(true),
-    libraryDependencies ++= dependencies,
+    libraryDependencies ++= Dependencies.dependencies,
     scalaVersion := "2.12.6",
     test in assembly := {},
 
