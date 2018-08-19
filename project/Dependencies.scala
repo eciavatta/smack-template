@@ -7,6 +7,7 @@ object Dependencies {
   lazy val dependencies = Seq(
     // project direct dependencies
     "com.datastax.cassandra"     %  "cassandra-driver-core"    % cassandraDriverVersion   guavaExclusion(),
+    "com.fasterxml.uuid"         %  "java-uuid-generator"      % uuidGeneratorVersion,
     "com.github.scopt"           %% "scopt"                    % scoptVersion,
     "com.sclasen"                %% "akka-zk-cluster-seed"     % akkaZkClusterSeedVersion akkaExclusion() slf4jExclusion() guavaExclusion() nettyExclusion(),
     "com.typesafe.akka"          %% "akka-actor"               % akkaVersion,
@@ -22,7 +23,8 @@ object Dependencies {
     "io.kamon"                   %% "kamon-executors"          % kamonExecutorsVersion    configExclusion() sourceCodeExclusion(),
     "io.sentry"                  %  "sentry"                   % sentryVersion            jacksonCoreExclusion() slf4jExclusion(),
 
-    // project test dependencies
+
+  // project test dependencies
     "com.typesafe.akka"          %% "akka-http-testkit"        % akkaHttpVersion   % Test akkaExclusion() akkaTestKitExclusion(),
     "com.typesafe.akka"          %% "akka-testkit"             % akkaVersion       % Test,
     "net.manub"                  %% "scalatest-embedded-kafka" % embKafkaVersion   % Test slf4jExclusion() snappyExclusion() zookeeperExclusion(),

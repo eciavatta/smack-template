@@ -10,7 +10,6 @@ import smack.cassandra.CassandraDatabase._
 import smack.cassandra.ScalaConverters._
 import smack.common.traits.{AskTimeout, ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
 import smack.common.utils.Helpers
-import smack.models.TestException
 import smack.models.messages.GenerateException
 
 import scala.collection.JavaConverters._
@@ -98,5 +97,7 @@ object CassandraDatabase {
   case class CassandraQueryMap(query: String, values: Map[String, Any]) extends CassandraMessage
   case class CassandraStatement(statement: Statement) extends CassandraMessage
   case class CassandraResult(resultSet: Try[ResultSet])
+
+  private[cassandra] case class TestException(message: String) extends Exception(message)
 
 }

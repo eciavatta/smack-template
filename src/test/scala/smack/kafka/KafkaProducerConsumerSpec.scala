@@ -11,8 +11,8 @@ import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.apache.kafka.common.serialization._
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpecLike}
 import smack.common.traits.AfterAllShutdown
+import smack.kafka.KafkaProducer.{SerializationException, TestException}
 import smack.models.messages.{GenerateException, TestRequest}
-import smack.models.{SerializationException, TestException}
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}

@@ -14,7 +14,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteBufferDeserializer, StringDeserializer}
 import smack.common.traits.{AskTimeout, ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
 import smack.common.utils.Helpers
-import smack.models.TestException
+import smack.kafka.KafkaConsumer.TestException
 import smack.models.messages.GenerateException
 
 import scala.util.{Failure, Success, Try}
@@ -83,5 +83,7 @@ object KafkaConsumer {
 
   def props(topic: String, group: String, consumingActor: ActorRef): Props = Props(new KafkaConsumer(topic, group, consumingActor))
   def name(topic: String, group: String): String = s"kafkaConsumer-$topic-$group"
+
+  private[kafka] case class TestException(message: String) extends Exception(message)
 
 }

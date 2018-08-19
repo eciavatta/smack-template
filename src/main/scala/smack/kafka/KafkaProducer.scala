@@ -15,10 +15,9 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteBufferSerializer, StringSerializer}
 import smack.common.traits.{ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
 import smack.common.utils.Helpers
-import smack.kafka.KafkaProducer.KafkaMessage
+import smack.kafka.KafkaProducer._
 import smack.kafka.ProtobufSerialization.serializeMessage
 import smack.models.messages.GenerateException
-import smack.models.{SerializationException, TestException}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -121,5 +120,8 @@ object KafkaProducer {
                                               sender: ActorRef) extends KafkaResult
   private[kafka] case class MultiKafkaResult(parts: List[SingleKafkaResult], sender: ActorRef) extends KafkaResult
   private[kafka] case class EmptyResult(sender: ActorRef) extends KafkaResult
+
+  private[kafka] case class TestException(message: String) extends Exception(message)
+  private[kafka] case object SerializationException extends Exception
 
 }

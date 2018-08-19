@@ -17,5 +17,6 @@ object Versions {
   val scalaTestVersion = "3.0.5"
   val scoptVersion = "3.7.0"
   val sentryVersion = "1.7.5"
+  val uuidGeneratorVersion = "3.1.5"
 
 }
