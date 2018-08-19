@@ -117,6 +117,7 @@ message UpdateSiteResponse {
 message DeleteSiteRequest {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.SiteRequest";
     string id = 1;
+    string userId = 2;
 }
 
 message DeleteSiteResponse {

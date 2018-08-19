@@ -99,6 +99,11 @@ class UserFlowSpec extends WordSpec with ScalatestRouteTest with TestKitBase wit
         status shouldEqual StatusCodes.OK
         responseAs[Option[User]] shouldEqual Some(user.get.copy(fullName = "correctName"))
       }
+
+      Get(s"/users/${user.get.id}") ~> userRoute ~> check {
+        status shouldEqual StatusCodes.OK
+        responseAs[Option[User]] shouldEqual Some(user.get.copy(fullName = "correctName"))
+      }
     }
 
     "fail when trying to update an invalid user" in {
