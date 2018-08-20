@@ -6,7 +6,7 @@ import smack.backend.controllers.{LogController, SiteController, UserController}
 import smack.common.serialization.MessageSerializer.{SiteRequest, UserRequest}
 import smack.models.messages.TraceLogRequest
 
-class BackendSupervisor extends Actor with ActorLogging {
+class ServiceSupervisor extends Actor with ActorLogging {
 
   private lazy val userController = context.actorOf(UserController.props, UserController.name)
   private lazy val siteController = context.actorOf(SiteController.props, SiteController.name)
@@ -24,7 +24,9 @@ class BackendSupervisor extends Actor with ActorLogging {
 
 }
 
-object BackendSupervisor {
-  def props: Props = Props(new BackendSupervisor)
-  def name: String = "backendSupervisor"
+object ServiceSupervisor {
+  def props: Props = Props(new ServiceSupervisor)
+  def name: String = "serviceSupervisor"
 }
+
+

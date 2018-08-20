@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 import akka.Done
 import akka.actor.ActorSystem
 import akka.serialization.{Serialization, SerializationExtension}
-import akka.testkit.{DefaultTimeout, ImplicitSender, TestKitBase, TestProbe}
+import akka.testkit.{ImplicitSender, TestKitBase, TestProbe}
 import com.typesafe.config.ConfigFactory
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.apache.kafka.common.serialization._
@@ -18,7 +18,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
-  with WordSpecLike with Matchers with AfterAllShutdown with BeforeAndAfterEach with ImplicitSender with DefaultTimeout {
+  with WordSpecLike with Matchers with AfterAllShutdown with BeforeAndAfterEach with ImplicitSender {
 
   implicit lazy val system: ActorSystem = ActorSystem("kafkaProducerConsumerSpec", ConfigFactory.load("test"))
 

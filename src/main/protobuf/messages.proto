@@ -130,7 +130,7 @@ message DeleteSiteResponse {
 
 message TraceLogRequest {
     option (scalapb.message).extends = "smack.common.serialization.MessageSerializer.RequestMessage";
-    string trackingId = 1;
+    string id = 1;
     string url = 2;
     string ipAddress = 3;
     string userAgent = 4;

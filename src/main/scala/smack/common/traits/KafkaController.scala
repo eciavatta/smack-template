@@ -1,22 +1,28 @@
 package smack.common.traits
 
 import akka.Done
-import akka.actor.{Actor, ActorLogging, ActorRef}
-import smack.common.serialization.MessageSerializer.ResponseMessage
+import akka.actor.{Actor, ActorLogging}
 import akka.pattern.{AskTimeoutException, ask}
+import smack.common.traits.Controller.{InternalServerErrorException, ServiceUnavailableException}
+import smack.common.utils.Helpers
 
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
-trait KafkaController extends AskTimeout with ContextDispatcher {
+trait KafkaController extends Controller with AskTimeout with ContextDispatcher {
   this: Actor with ActorLogging =>
 
-  protected def kafkaController: ActorRef
+  private val kafkaProducerRef = Helpers.createKafkaProducerPool(kafkaTopic)
 
-  protected def sendToKafka(message: AnyRef, sender: ActorRef, response: ResponseMessage): Unit =
-    kafkaController.ask(message).mapTo[Done].onComplete {
-      case Success(_) => sender ! response
-      case Failure(_: AskTimeoutException) => log.error(s"Kafka controller [${kafkaController.path}] is unreachable.")
-      case Failure(ex) => log.error(ex, ex.getMessage)
+  protected def kafkaTopic: String
+
+  protected def sendToKafka(message: AnyRef): Future[Done] =
+    kafkaProducerRef.ask(message).mapTo[Try[Done]].map {
+      case Success(done) => done
+      case Failure(_: AskTimeoutException) => throw ServiceUnavailableException
+      case Failure(ex) =>
+        log.error(ex, ex.getMessage)
+        throw InternalServerErrorException(ex)
     }
 
 }

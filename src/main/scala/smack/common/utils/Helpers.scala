@@ -27,7 +27,7 @@ object Helpers {
   def actorConfig(implicit context: ActorContext): Config = config(context)
 
   def createKafkaProducerPool(topic: String)(implicit context: ActorContext): ActorRef = {
-    val paths = (1 to config(context).getInt(s"smack.entities.$topic.kafka-partitions")) map { i =>
+    val paths = (0 until config(context).getInt(s"smack.topics.${getEnvironment(config(context))}.$topic.kafka-partitions")) map { i =>
       context.actorOf(KafkaProducer.props(topic, i), KafkaProducer.name(topic, i)).path.toStringWithoutAddress
     }
 

@@ -1,4 +1,4 @@
-package smack.project
+package smack.controllers
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.Logging
@@ -6,11 +6,11 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.testkit.{DefaultTimeout, TestKitBase}
+import akka.testkit.TestKitBase
 import com.fasterxml.uuid.Generators
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
-import smack.backend.controllers.SiteController
+import smack.backend.BackendSupervisor
 import smack.common.mashallers.Marshalling
 import smack.common.utils.Helpers
 import smack.commons.utils.DatabaseUtils
@@ -20,19 +20,19 @@ import smack.frontend.routes.SiteRoute
 import smack.frontend.routes.SiteRoute.{SiteCreating, SiteDeleting, SiteUpdating, SitesListing}
 import smack.models.structures.Site
 
-class SiteFlowSpec extends WordSpec with ScalatestRouteTest with TestKitBase with BeforeAndAfterAll with Matchers with Marshalling with DefaultTimeout {
+class SiteControllerSpec extends WordSpec with ScalatestRouteTest with TestKitBase with BeforeAndAfterAll with Matchers with Marshalling {
 
   lazy implicit val config: Config = ConfigFactory.load("test")
   lazy val log = Logging(system, this.getClass.getName)
   val migrationController: MigrationController = MigrationController.createMigrationController(system,
     Seq(CreateSitesByIdTable, CreateSitesByTrackingIdTable, CreateSitesByUsersTable))
 
-  lazy val siteController: ActorRef = system.actorOf(SiteController.props, SiteController.name)
-  lazy val siteRoute: Route = SiteRoute(siteController).route
+  lazy val backendSupervisor: ActorRef = system.actorOf(BackendSupervisor.props, BackendSupervisor.name)
+  lazy val siteRoute: Route = SiteRoute(backendSupervisor).route
 
-  val userId: String = "327ccc3c-a3bf-11e8-98d0-529269fb1459"
+  val userId: String = Generators.timeBasedGenerator().generate().toString
 
-  protected override def createActorSystem(): ActorSystem = ActorSystem("siteFlowSpec", config)
+  protected override def createActorSystem(): ActorSystem = ActorSystem("siteControllerSpec", config)
 
   protected override def beforeAll(): Unit = {
     migrationController.migrate(createKeyspace = true)
@@ -43,7 +43,7 @@ class SiteFlowSpec extends WordSpec with ScalatestRouteTest with TestKitBase wit
     shutdown()
   }
 
-  "site request flow" should {
+  "site request controller" should {
 
     "return an empty list for an user without sites" in {
       Get("/sites", SitesListing(userId)) ~> siteRoute ~> check {

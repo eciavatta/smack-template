@@ -1,4 +1,4 @@
-package smack.project
+package smack.controllers
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.Logging
@@ -6,11 +6,11 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.testkit.{DefaultTimeout, TestKitBase}
+import akka.testkit.TestKitBase
 import com.fasterxml.uuid.Generators
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
-import smack.backend.controllers.UserController
+import smack.backend.BackendSupervisor
 import smack.common.mashallers.Marshalling
 import smack.common.utils.Helpers
 import smack.commons.utils.DatabaseUtils
@@ -21,16 +21,16 @@ import smack.frontend.routes.UserRoute._
 import smack.frontend.server.ValidationDirective.ModelValidationRejection
 import smack.models.structures.User
 
-class UserFlowSpec extends WordSpec with ScalatestRouteTest with TestKitBase with BeforeAndAfterAll with Matchers with Marshalling with DefaultTimeout {
+class UserControllerSpec extends WordSpec with ScalatestRouteTest with TestKitBase with BeforeAndAfterAll with Matchers with Marshalling {
 
   lazy implicit val config: Config = ConfigFactory.load("test")
   lazy val log = Logging(system, this.getClass.getName)
   val migrationController: MigrationController = MigrationController.createMigrationController(system, Seq(CreateUsersByIdTable, CreateUsersByCredentialsTable))
 
-  lazy val userController: ActorRef = system.actorOf(UserController.props, UserController.name)
-  lazy val userRoute: Route = UserRoute(userController).route
+  lazy val backendSupervisor: ActorRef = system.actorOf(BackendSupervisor.props, BackendSupervisor.name)
+  lazy val userRoute: Route = UserRoute(backendSupervisor).route
 
-  protected override def createActorSystem(): ActorSystem = ActorSystem("userFlowSpec", config)
+  protected override def createActorSystem(): ActorSystem = ActorSystem("userControllerSpec", config)
 
   protected override def beforeAll(): Unit = {
     migrationController.migrate(createKeyspace = true)
@@ -41,7 +41,7 @@ class UserFlowSpec extends WordSpec with ScalatestRouteTest with TestKitBase wit
     shutdown()
   }
 
-  "user request flow" should {
+  "user request controller" should {
 
     "fail when finding invalid or non existing users" in {
       Get("/users/malformedUUID") ~> userRoute ~> check {

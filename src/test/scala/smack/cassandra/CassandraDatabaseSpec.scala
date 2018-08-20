@@ -2,7 +2,7 @@ package smack.cassandra
 
 import akka.actor.ActorSystem
 import akka.pattern.ask
-import akka.testkit.{ImplicitSender, TestKitBase}
+import akka.testkit.TestKitBase
 import akka.util.Timeout
 import com.datastax.driver.core.{ResultSet, Session}
 import com.typesafe.config.{Config, ConfigFactory}
@@ -17,7 +17,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Try
 
-class CassandraDatabaseSpec extends TestKitBase with WordSpecLike with BeforeAndAfterAll with Matchers with ImplicitSender {
+class CassandraDatabaseSpec extends TestKitBase with WordSpecLike with BeforeAndAfterAll with Matchers {
 
   lazy implicit val system: ActorSystem = ActorSystem("cassandraDatabaseSpec", config)
   lazy implicit val config: Config = ConfigFactory.load("test")
