@@ -2,7 +2,6 @@ package smack.backend.services
 
 import akka.Done
 import akka.actor.{Actor, ActorLogging, Props}
-import akka.pattern.pipe
 import com.datastax.driver.core.SimpleStatement
 import smack.cassandra.CassandraDatabase.CassandraStatement
 import smack.common.traits.CassandraController
@@ -10,15 +9,21 @@ import smack.kafka.KafkaConsumer
 import smack.models.messages._
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 class LogService extends Actor with CassandraController with ActorLogging {
 
   private val topic = "logs"
-  private val consumerGroup = "log-group"
+  private val consumerGroup = "service-consumer"
   context.actorOf(KafkaConsumer.props(topic, consumerGroup, self), KafkaConsumer.name(topic, consumerGroup))
 
   override def receive: Receive = {
-    case traceLogRequest: TraceLogRequest => traceLog(traceLogRequest) pipeTo sender()
+    case traceLogRequest: TraceLogRequest =>
+      val _sender = sender()
+      traceLog(traceLogRequest).onComplete {
+      case Success(done) => _sender ! Success(done)
+      case Failure(ex) => _sender ! Failure(ex)
+    }
   }
 
   private def traceLog(traceLogRequest: TraceLogRequest): Future[Done] = Future

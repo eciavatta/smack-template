@@ -7,7 +7,6 @@ val projectOrganization = "it.eciavatta"
 
 // add scalastyle to compile task
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
-coverageEnabled := true
 
 lazy val root = Project(
   id = projectName,
@@ -15,9 +14,11 @@ lazy val root = Project(
 ).enablePlugins(BuildInfoPlugin)
   .enablePlugins(AssemblyPlugin)
   .enablePlugins(DockerPlugin)
+  .enablePlugins(MultiJvmPlugin)
   .settings(buildInfoSettings: _*)
   .settings(assemblySettings: _*)
   .settings(dockerSettings: _*)
+  .configs(MultiJvm)
   .settings(
     name := projectName,
     version := projectVersion,
@@ -32,6 +33,8 @@ lazy val root = Project(
     libraryDependencies ++= Dependencies.dependencies,
     scalaVersion := "2.12.6",
     test in assembly := {},
+    coverageEnabled := true,
+    fork in Test := true,
 
     PB.targets in Compile := Seq(
       scalapb.gen() -> (sourceManaged in Compile).value / "protobuf"

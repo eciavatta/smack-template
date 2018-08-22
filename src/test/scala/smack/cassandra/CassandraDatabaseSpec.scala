@@ -2,8 +2,7 @@ package smack.cassandra
 
 import akka.actor.ActorSystem
 import akka.pattern.ask
-import akka.testkit.TestKitBase
-import akka.util.Timeout
+import akka.testkit.{DefaultTimeout, TestKitBase}
 import com.datastax.driver.core.{ResultSet, Session}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
@@ -17,21 +16,19 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Try
 
-class CassandraDatabaseSpec extends TestKitBase with WordSpecLike with BeforeAndAfterAll with Matchers {
+class CassandraDatabaseSpec extends TestKitBase with WordSpecLike with BeforeAndAfterAll with Matchers with DefaultTimeout {
 
-  lazy implicit val system: ActorSystem = ActorSystem("cassandraDatabaseSpec", config)
-  lazy implicit val config: Config = ConfigFactory.load("test")
+  implicit lazy val config: Config = ConfigFactory.load("test")
+  lazy val system: ActorSystem = ActorSystem("cassandraDatabaseSpec", config)
 
-  implicit lazy val session: Session = DatabaseUtils.createTestSession()
-  implicit val timeout: Timeout = 3.seconds
-
+  lazy val session: Session = DatabaseUtils.createTestSession()
   val keyspaceName: String = DatabaseUtils.getTestKeyspaceName
 
-  protected override def beforeAll(): Unit = {
+  override def beforeAll(): Unit = {
     DatabaseUtils.createTestKeyspace()
   }
 
-  protected override def afterAll(): Unit = {
+  override def afterAll(): Unit = {
     DatabaseUtils.dropTestKeyspace()
     shutdown()
   }

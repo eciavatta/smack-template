@@ -17,3 +17,6 @@ addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.9.1")
 
 // Integrates the scoverage code coverage library
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")
+
+// Supports running applications and ScalaTest tests in multiple JVMs at the same time
+addSbtPlugin("com.typesafe.sbt" % "sbt-multi-jvm" % "0.4.0")

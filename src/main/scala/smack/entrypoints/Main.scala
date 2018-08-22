@@ -45,8 +45,11 @@ object Main {
          |smack.sentry.dns = "${params.sentryDns.fold("")(identity)}"
        """.stripMargin)
 
-    if (params.role.isDefined) config = config.withFallback(ConfigFactory.load(params.role.get))
-    config = config.withFallback(ConfigFactory.load(s"smack-${params.environment}"))
+    if (params.role.isDefined) {
+      config = config.withFallback(ConfigFactory.parseResources(s"${params.role.get}.conf"))
+      config = config.withFallback(ConfigFactory.parseResources("application.conf"))
+    }
+    config = config.withFallback(ConfigFactory.parseResources(s"smack-${params.environment}.conf")).resolve()
 
     val system: ActorSystem = ActorSystem(config.getString("smack.name"), config)
 
@@ -74,7 +77,7 @@ object Main {
 
     params.role.get match {
       case "frontend" =>
-        val server = new WebServer(system)
+        val server = WebServer.create(system)
         server.start()
         system.registerOnTermination(server.stop())
       case "backend" =>
@@ -177,7 +180,7 @@ object Main {
     note("...")
   }
 
-  private def checkAndGetConfig(args: Array[String]) = argumentParser.parse(args, Config()) match {
+  private def checkAndGetConfig(args: Array[String]): Config = argumentParser.parse(args, Config()) match {
     case Some(config) => config
     case None => sys.exit(1)
   }

@@ -20,7 +20,7 @@ import scala.util.{Failure, Success, Try}
 class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
   with WordSpecLike with Matchers with AfterAllShutdown with BeforeAndAfterEach with ImplicitSender {
 
-  implicit lazy val system: ActorSystem = ActorSystem("kafkaProducerConsumerSpec", ConfigFactory.load("test"))
+  lazy implicit val system: ActorSystem = ActorSystem("kafkaProducerConsumerSpec", ConfigFactory.load("test"))
 
   val consumerGroup = "embedded-kafka-spec"
   val topic = "test"
@@ -28,16 +28,17 @@ class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
   val zookeeperPort = 2181
   val kafkaPort = 9092
 
-  implicit lazy val keySerializer: Serializer[String] = new StringSerializer
-  implicit lazy val valueSerializer: Serializer[ByteBuffer] = new ByteBufferSerializer
-  implicit lazy val keyDeserializer: Deserializer[String] = new StringDeserializer
-  implicit lazy val valueDeserializer: Deserializer[ByteBuffer] = new ByteBufferDeserializer
-  implicit lazy val serialization: Serialization = SerializationExtension(system)
+  implicit val keySerializer: Serializer[String] = new StringSerializer
+  implicit val valueSerializer: Serializer[ByteBuffer] = new ByteBufferSerializer
+  implicit val keyDeserializer: Deserializer[String] = new StringDeserializer
+  implicit val valueDeserializer: Deserializer[ByteBuffer] = new ByteBufferDeserializer
+  implicit val serialization: Serialization = SerializationExtension(system)
   implicit val kafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(kafkaPort, zookeeperPort)
 
-  protected override def afterEach(): Unit = {
+  override def afterEach(): Unit = {
     Try {
-      consumeNumberMessagesFromTopics[ByteBuffer](Set(topic), number = 3, autoCommit = true, 500.millis, resetTimeoutOnEachMessage = false) // clean topic
+      // clean topic
+      consumeNumberMessagesFromTopics[ByteBuffer](Set(topic), number = Int.MaxValue, autoCommit = true, 500.millis, resetTimeoutOnEachMessage = false)
     }
   }
 
@@ -52,7 +53,7 @@ class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
       serializationResult.isSuccess shouldBe true
 
       ProtobufSerialization.deserializeMessage(serializableMessage.getClass.getName,
-        ByteBuffer.wrap(serializationResult.get.array())) shouldBe Success(serializableMessage)
+        ByteBuffer.wrap(serializationResult.get.array())) shouldEqual Success(serializableMessage)
 
       val unSerializationResult = ProtobufSerialization.serializeMessage(unSerializableMessage)
       unSerializationResult.isSuccess shouldBe false
@@ -90,7 +91,7 @@ class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
 
       expectMsg(Success(Done))
       val (key, value) = consumeFirstKeyedMessageFrom[String, ByteBuffer](topic)
-      ProtobufSerialization.deserializeMessage(key, value) shouldBe Success(restartMessage)
+      ProtobufSerialization.deserializeMessage(key, value) shouldEqual Success(restartMessage)
     }
 
   }

@@ -6,7 +6,7 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
 trait AfterAllShutdown extends BeforeAndAfterAll {
   this: TestKitBase with Suite =>
 
-  protected override def afterAll(): Unit = {
+  override def afterAll(): Unit = {
     super.afterAll()
     shutdown()
   }

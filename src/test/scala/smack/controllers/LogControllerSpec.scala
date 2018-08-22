@@ -4,7 +4,6 @@ import java.nio.ByteBuffer
 import java.util.UUID
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.event.Logging
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
@@ -19,6 +18,7 @@ import org.apache.kafka.common.serialization.{ByteBufferDeserializer, Deserializ
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpec}
 import smack.backend.controllers.LogController
 import smack.common.mashallers.Marshalling
+import smack.common.utils.Helpers
 import smack.commons.utils.DatabaseUtils
 import smack.database.MigrationController
 import smack.database.migrations.CreateSitesByTrackingIdTable
@@ -33,12 +33,10 @@ import scala.util.{Success, Try}
 class LogControllerSpec extends WordSpec with ScalatestRouteTest with TestKitBase
   with BeforeAndAfterEach with BeforeAndAfterAll with Matchers with Marshalling with EmbeddedKafka {
 
-  lazy implicit val config: Config = ConfigFactory.load("test")
-  lazy val log = Logging(system, this.getClass.getName)
+  implicit lazy val config: Config = ConfigFactory.load("test")
   val migrationController: MigrationController = MigrationController.createMigrationController(system, Seq(CreateSitesByTrackingIdTable))
 
   val topic = "logs"
-  val partition = 0
   val zookeeperPort = 2181
   val kafkaPort = 9092
 
@@ -50,20 +48,21 @@ class LogControllerSpec extends WordSpec with ScalatestRouteTest with TestKitBas
   val siteId: UUID = Generators.timeBasedGenerator().generate()
 
   implicit val kafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(kafkaPort, zookeeperPort)
-  implicit lazy val keyDeserializer: Deserializer[String] = new StringDeserializer
-  implicit lazy val valueDeserializer: Deserializer[ByteBuffer] = new ByteBufferDeserializer
-  implicit lazy val serialization: Serialization = SerializationExtension(system)
+  implicit val keyDeserializer: Deserializer[String] = new StringDeserializer
+  implicit val valueDeserializer: Deserializer[ByteBuffer] = new ByteBufferDeserializer
+  implicit val serialization: Serialization = SerializationExtension(system)
 
-  protected override def createActorSystem(): ActorSystem = ActorSystem("logControllerSpec", config)
+  override def createActorSystem(): ActorSystem = ActorSystem("logControllerSpec", config)
 
-  protected override def beforeAll(): Unit = {
+  override def beforeAll(): Unit = {
     migrationController.migrate(createKeyspace = true)
     cassandraSession.execute(new SimpleStatement("INSERT INTO sites_by_tracking_id (tracking_id, site_id) VALUES (?, ?)", trackingId, siteId))
   }
 
-  protected override def afterEach(): Unit = {
+  override def afterEach(): Unit = {
     Try {
-      consumeNumberMessagesFromTopics[ByteBuffer](Set(topic), number = 3, autoCommit = true, 500.millis, resetTimeoutOnEachMessage = false) // clean topic
+      // clean topic
+      consumeNumberMessagesFromTopics[ByteBuffer](Set(topic), number = Int.MaxValue, autoCommit = true, 500.millis, resetTimeoutOnEachMessage = false)
     }
   }
 
@@ -79,11 +78,10 @@ class LogControllerSpec extends WordSpec with ScalatestRouteTest with TestKitBas
       val ipAddress = "127.0.0.1"
       val userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36"
 
-      /* Why not pass travis?
       Post("/logs/malformedUUID", LogEvent(url, ipAddress, userAgent)) ~> logRoute ~> check {
         status shouldEqual StatusCodes.BadRequest
         responseAs[String] shouldEqual Helpers.getError("badUUID").get
-      } */
+      }
 
       Post(s"/logs/${Generators.randomBasedGenerator().generate().toString}", LogEvent(url, ipAddress, userAgent)) ~> logRoute ~> check {
         status shouldEqual StatusCodes.NotFound

@@ -26,6 +26,7 @@ object Dependencies {
 
   // project test dependencies
     "com.typesafe.akka"          %% "akka-http-testkit"        % akkaHttpVersion   % Test akkaExclusion() akkaTestKitExclusion(),
+    "com.typesafe.akka"          %% "akka-multi-node-testkit"  % akkaVersion       % Test,
     "com.typesafe.akka"          %% "akka-testkit"             % akkaVersion       % Test,
     "net.manub"                  %% "scalatest-embedded-kafka" % embKafkaVersion   % Test slf4jExclusion() snappyExclusion() zookeeperExclusion(),
     "org.scalacheck"             %% "scalacheck"               % scalaCheckVersion % Test,

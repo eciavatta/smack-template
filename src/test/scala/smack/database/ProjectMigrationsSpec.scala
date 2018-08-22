@@ -10,8 +10,8 @@ import scala.util.Success
 
 class ProjectMigrationsSpec extends TestKitBase with WordSpecLike with BeforeAndAfterAll with Matchers {
 
-  lazy implicit val system: ActorSystem = ActorSystem("projectMigrationsSpec", config)
-  lazy implicit val config: Config = ConfigFactory.load("test")
+  implicit lazy val config: Config = ConfigFactory.load("test")
+  lazy val system: ActorSystem = ActorSystem("projectMigrationsSpec", config)
 
   override def afterAll(): Unit = {
     DatabaseUtils.dropTestKeyspace()
@@ -22,12 +22,12 @@ class ProjectMigrationsSpec extends TestKitBase with WordSpecLike with BeforeAnd
 
     "perform project migration correctly" in {
       val migrationController = MigrationController.createMigrationController(system)
-      migrationController.migrate(createKeyspace = true) shouldBe Success(MigrateSequence.seq.size)
+      migrationController.migrate(createKeyspace = true) shouldEqual Success(MigrateSequence.seq.size)
     }
 
     "reset project migrations" in {
       val migrationController = MigrationController.createMigrationController(system)
-      migrationController.reset() shouldBe Success(MigrateSequence.seq.size)
+      migrationController.reset() shouldEqual Success(MigrateSequence.seq.size)
     }
 
   }

@@ -19,7 +19,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class WebServer(private val system: ActorSystem) {
+class WebServer(system: ActorSystem, backendRouter: ActorRef) {
 
   private implicit val actorSystem: ActorSystem = system
   private implicit val materializer: ActorMaterializer = ActorMaterializer()
@@ -30,8 +30,6 @@ class WebServer(private val system: ActorSystem) {
   private val host: String = config.getString("akka.http.server.host")
   private val port: Int = config.getInt("akka.http.server.port")
   private var binding: Future[Http.ServerBinding] = Future.never
-
-  private val backendRouter: ActorRef = system.actorOf(FromConfig.props(Props.empty), name = "backendRouter")
 
   private implicit def myRejectionHandler: RejectionHandler = RejectionHandler.newBuilder()
     .handle {
@@ -105,5 +103,12 @@ class WebServer(private val system: ActorSystem) {
 
   private def buildBadRequestResponse(message: String): Route = routeWithDirectives(complete(HttpResponse(
     StatusCodes.BadRequest, entity = HttpEntity(message).withContentType(ContentTypes.`application/json`))))
+
+}
+
+object WebServer {
+
+  def create(system: ActorSystem): WebServer = new WebServer(system, system.actorOf(FromConfig.props(Props.empty), name = "backendRouter"))
+  def create(system: ActorSystem, backendRouter: ActorRef): WebServer = new WebServer(system, backendRouter)
 
 }
