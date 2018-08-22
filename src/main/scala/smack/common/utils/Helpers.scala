@@ -27,7 +27,7 @@ object Helpers {
   def actorConfig(implicit context: ActorContext): Config = config(context)
 
   def createKafkaProducerPool(topic: String)(implicit context: ActorContext): ActorRef = {
-    val paths = (0 until config(context).getInt(s"smack.topics.${getEnvironment(config(context))}.$topic.kafka-partitions")) map { i =>
+    val paths = (0 until config(context).getInt(s"smack.topics.$topic.kafka-partitions")) map { i =>
       context.actorOf(KafkaProducer.props(topic, i), KafkaProducer.name(topic, i)).path.toStringWithoutAddress
     }
 
@@ -41,7 +41,7 @@ object Helpers {
   def getError(key: String)(implicit config: Config): Option[String] = getString(s"errors.$key")
 
   def createCassandraDatabaseActor()(implicit context: ActorContext): ActorRef = {
-    val keyspace = config(context).getString(s"smack.database.migrations.${getEnvironment(actorConfig(context))}.keyspaceName")
+    val keyspace = config(context).getString(s"smack.database.migrations.keyspaceName")
     context.actorOf(CassandraDatabase.props(keyspace), CassandraDatabase.name(keyspace))
   }
 

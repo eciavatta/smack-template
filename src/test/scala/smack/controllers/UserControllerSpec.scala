@@ -10,7 +10,7 @@ import akka.testkit.TestKitBase
 import com.fasterxml.uuid.Generators
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
-import smack.backend.BackendSupervisor
+import smack.backend.controllers.UserController
 import smack.common.mashallers.Marshalling
 import smack.common.utils.Helpers
 import smack.commons.utils.DatabaseUtils
@@ -27,8 +27,8 @@ class UserControllerSpec extends WordSpec with ScalatestRouteTest with TestKitBa
   lazy val log = Logging(system, this.getClass.getName)
   val migrationController: MigrationController = MigrationController.createMigrationController(system, Seq(CreateUsersByIdTable, CreateUsersByCredentialsTable))
 
-  lazy val backendSupervisor: ActorRef = system.actorOf(BackendSupervisor.props, BackendSupervisor.name)
-  lazy val userRoute: Route = UserRoute(backendSupervisor).route
+  lazy val userController: ActorRef = system.actorOf(UserController.props, UserController.name)
+  lazy val userRoute: Route = UserRoute(userController).route
 
   protected override def createActorSystem(): ActorSystem = ActorSystem("userControllerSpec", config)
 

@@ -19,7 +19,7 @@ class SentryLogger extends Actor {
   private val serverInstance = s"${config.getString("akka.remote.netty.tcp.hostname")}:${config.getString("akka.remote.netty.tcp.port")}"
 
   override def preStart(): Unit = {
-    sentry = SentryClientFactory.sentryClient(config.getString("sentry.dns"))
+    sentry = SentryClientFactory.sentryClient(config.getString("smack.sentry.dns"))
     sentry.addTag("environment", environment)
     sentry.addTag("version", version)
     sentry.addTag("platform", platform)

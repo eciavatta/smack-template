@@ -11,6 +11,7 @@ import akka.pattern.AskTimeoutException
 import akka.routing.FromConfig
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
+import smack.common.utils.Helpers
 import smack.frontend.routes.RegisteredRoutes
 import smack.frontend.server.ValidationDirective._
 
@@ -69,7 +70,7 @@ class WebServer(private val system: ActorSystem) {
   }
 
   private def withRequestLogging: Directive0 =
-    if (config.getBoolean("akka.http.server.log-server-requests.enabled")) {
+    if (Helpers.isDebugEnabled) {
       extractRequestContext.flatMap { ctx =>
         val time = System.currentTimeMillis()
         extractClientIP.flatMap { ip =>
@@ -87,7 +88,7 @@ class WebServer(private val system: ActorSystem) {
   private def calcMillis(from: Long) = s"${System.currentTimeMillis() - from} ms"
 
   private def withServerAddressHeader(serverAddress: String): Directive0 =
-    if (config.getBoolean("akka.http.server.address-server-header.enabled")) {
+    if (Helpers.isDebugEnabled) {
       respondWithHeaders(RawHeader("X-Server-Address", serverAddress))
     } else {
       Directive.Empty

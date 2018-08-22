@@ -5,7 +5,7 @@ import com.typesafe.config.Config
 
 object DatabaseUtils {
 
-  def getTestKeyspaceName(implicit config: Config): String = config.getString("smack.database.migrations.testing.keyspaceName")
+  def getTestKeyspaceName(implicit config: Config): String = config.getString("smack.database.migrations.keyspaceName")
 
   def createCluster()(implicit config: Config): Cluster = Cluster.builder
     .addContactPoint(config.getString("smack.cassandra.contact-point.host"))

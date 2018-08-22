@@ -10,7 +10,7 @@ import akka.testkit.TestKitBase
 import com.fasterxml.uuid.Generators
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
-import smack.backend.BackendSupervisor
+import smack.backend.controllers.SiteController
 import smack.common.mashallers.Marshalling
 import smack.common.utils.Helpers
 import smack.commons.utils.DatabaseUtils
@@ -27,8 +27,8 @@ class SiteControllerSpec extends WordSpec with ScalatestRouteTest with TestKitBa
   val migrationController: MigrationController = MigrationController.createMigrationController(system,
     Seq(CreateSitesByIdTable, CreateSitesByTrackingIdTable, CreateSitesByUsersTable))
 
-  lazy val backendSupervisor: ActorRef = system.actorOf(BackendSupervisor.props, BackendSupervisor.name)
-  lazy val siteRoute: Route = SiteRoute(backendSupervisor).route
+  lazy val siteController: ActorRef = system.actorOf(SiteController.props, SiteController.name)
+  lazy val siteRoute: Route = SiteRoute(siteController).route
 
   val userId: String = Generators.timeBasedGenerator().generate().toString
 

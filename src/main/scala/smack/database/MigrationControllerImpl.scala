@@ -14,7 +14,7 @@ import scala.util.Try
 private[database] class MigrationControllerImpl(system: ActorSystem, migrationSeq: Seq[Migration]) extends MigrationController {
 
   private val config: Config = system.settings.config
-  private val migrationConfig: Config = config.getConfig(s"smack.database.migrations.${Helpers.getEnvironment(config)}")
+  private val migrationConfig: Config = config.getConfig(s"smack.database.migrations")
   private val keyspaceName = migrationConfig.getString("keyspaceName")
   private val log = Logging(system, "MigrationController")
 
