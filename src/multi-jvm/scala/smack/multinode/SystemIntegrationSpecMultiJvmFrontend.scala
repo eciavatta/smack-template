@@ -87,17 +87,17 @@ class SystemIntegrationSpecMultiJvmFrontend extends MultiNodeSpec(SystemIntegrat
 
     "execute an integration test that use both systems" in {
       val futureTest: Future[Unit] = Marshal(UserCreating("valid@example.com", "foobar", "testUser")).to[RequestEntity] flatMap { entity =>
-        Http().singleRequest(HttpRequest(uri = "http://localhost:8080/users", method = HttpMethods.POST, entity = entity))
+        Http().singleRequest(HttpRequest(uri = "http://127.0.0.1:8080/users", method = HttpMethods.POST, entity = entity))
       } flatMap { createResponse =>
         createResponse.status shouldEqual StatusCodes.OK
         Unmarshal(createResponse.entity).to[User]
       } flatMap { user =>
-        Http().singleRequest(HttpRequest(uri = s"http://localhost:8080/users/${user.id}", method = HttpMethods.GET))
+        Http().singleRequest(HttpRequest(uri = s"http://127.0.0.1:8080/users/${user.id}", method = HttpMethods.GET))
       } map { getResponse =>
         getResponse.status shouldEqual StatusCodes.OK
       }
 
-      Await.ready(futureTest, 3.seconds)
+      Await.ready(futureTest, 10.seconds)
     }
 
     "consume log message from kafka partition and save in database" in {
