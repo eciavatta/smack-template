@@ -5,8 +5,10 @@ import akka.cluster.seed.ZookeeperClusterSeed
 import com.typesafe.config.ConfigFactory
 import kamon.Kamon
 import kamon.datadog.{DatadogAPIReporter, DatadogAgentReporter}
+import scopt.OptionParser
 import smack.BuildInfo
 import smack.backend.{BackendSupervisor, ServiceSupervisor}
+import smack.client.WebClient
 import smack.database.MigrationController
 import smack.frontend.server.WebServer
 
@@ -43,6 +45,11 @@ object Main {
          |smack.cassandra.contact-point.host = "${cassandraRegex.group(1)}"
          |smack.cassandra.contact-point.port = ${cassandraRegex.group(2)}
          |smack.sentry.dns = "${params.sentryDns.fold("")(identity)}"
+         |smack.client.host = "${params.clientHost}"
+         |smack.client.port = ${params.clientPort}
+         |smack.client.parallelism = ${params.clientParallelism}
+         |smack.client.requests-per-second = ${params.clientRequestsPerSecond}
+         |smack.client.count = ${params.clientCount}
        """.stripMargin)
 
     if (params.role.isDefined) {
@@ -65,29 +72,33 @@ object Main {
       sys.exit(0)
     }
 
-    ZookeeperClusterSeed(system).join()
+    if (params.client) {
+      system.actorOf(WebClient.props, WebClient.name)
+    } else {
+      ZookeeperClusterSeed(system).join()
 
-    if (params.datadogAgentEnabled) {
-      Kamon.addReporter(new DatadogAgentReporter())
-    }
+      if (params.datadogAgentEnabled) {
+        Kamon.addReporter(new DatadogAgentReporter())
+      }
 
-    if (params.datadogApiEnabled) {
-      Kamon.addReporter(new DatadogAPIReporter())
-    }
+      if (params.datadogApiEnabled) {
+        Kamon.addReporter(new DatadogAPIReporter())
+      }
 
-    params.role.get match {
-      case "frontend" =>
-        val server = WebServer.create(system)
-        server.start()
-        system.registerOnTermination(server.stop())
-      case "backend" =>
-        system.actorOf(BackendSupervisor.props, BackendSupervisor.name)
-      case "service" =>
-        system.actorOf(ServiceSupervisor.props, ServiceSupervisor.name)
+      params.role.get match {
+        case "frontend" =>
+          val server = WebServer.create(system)
+          server.start()
+          system.registerOnTermination(server.stop())
+        case "backend" =>
+          system.actorOf(BackendSupervisor.props, BackendSupervisor.name)
+        case "service" =>
+          system.actorOf(ServiceSupervisor.props, ServiceSupervisor.name)
+      }
     }
   }
 
-  private def argumentParser = new scopt.OptionParser[Config](BuildInfo.name) {
+  private def argumentParser: OptionParser[Config] = new scopt.OptionParser[Config](BuildInfo.name) {
     head(BuildInfo.name, BuildInfo.version)
 
     opt[String]('l',"loglevel").optional()
@@ -137,6 +148,27 @@ object Main {
       .validate(role => if (configRoles.contains(role)) success else failure("undefined role"))
       .text("...")
 
+    cmd("client")
+      .action((_, c) => c.copy(client = true))
+      .children(
+        opt[String]('h', "host")
+          .action((host, config) => config.copy(clientHost = host))
+          .text("..."),
+        opt[Int]('p', "port")
+          .action((port, config) => config.copy(clientPort = port))
+          .text("..."),
+        opt[Int]('r', "parallelism")
+          .action((parallelism, config) => config.copy(clientParallelism = parallelism))
+          .text("..."),
+        opt[Int]('n', "requests-per-second")
+          .action((requestsPerSecond, config) => config.copy(clientRequestsPerSecond = requestsPerSecond))
+          .text("..."),
+        opt[Long]('c', "count")
+          .action((count, config) => config.copy(clientCount = count))
+          .text("0 for infinite")
+      )
+      .text("...")
+
     cmd("migrate")
       .action((_, c) => c.copy(migrate = Some("migrate")))
       .children(
@@ -172,8 +204,8 @@ object Main {
       .text("...")
 
     checkConfig {
-      case config if config.migrate.isDefined && config.role.isDefined => failure("invalid param <role>")
-      case config if config.migrate.isEmpty && config.role.isEmpty => failure("undefined param <role>")
+      case config if (config.migrate.isDefined && config.role.isDefined) || (config.client && config.role.isDefined) => failure("invalid param <role>")
+      case config if config.migrate.isEmpty && !config.client && config.role.isEmpty => failure("undefined param <role>")
       case _ => success
     }
 
@@ -184,6 +216,9 @@ object Main {
     case Some(config) => config
     case None => sys.exit(1)
   }
+
+  private val defaultClientPort = 80
+  private val defaultClientRequestsPerSecond = 20
 
   private case class Config(akkaZoo: String = "127.0.0.1:2181/akka",
                             cassandra: String = "127.0.0.1:9042",
@@ -200,6 +235,12 @@ object Main {
                             migrate: Option[String] = None,
                             migrateForce: Boolean = false,
                             rollbackSteps: Int = 1,
-                            createKeyspace: Boolean = false)
+                            createKeyspace: Boolean = false,
+                            client: Boolean = false,
+                            clientHost: String = "127.0.0.1",
+                            clientPort: Int = defaultClientPort,
+                            clientParallelism: Int = 2,
+                            clientRequestsPerSecond: Int = defaultClientRequestsPerSecond,
+                            clientCount: Long = 0)
 
 }
