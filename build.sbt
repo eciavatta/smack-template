@@ -141,7 +141,6 @@ lazy val dockerSettings = Seq(
       copy(file("agents/aspectjweaver-1.9.1.jar"), "/app/aspectjweaver.jar")
       copy(artifact, artifactTargetPath)
       entryPoint("java", "-javaagent:/app/aspectjweaver.jar", "-cp", artifactTargetPath, "smack.entrypoints.Main")
-      tag()
     }
   }
 )
