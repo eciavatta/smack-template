@@ -18,5 +18,7 @@ object Versions {
   val scoptVersion = "3.7.0"
   val sentryVersion = "1.7.5"
   val uuidGeneratorVersion = "3.1.5"
+  val sparkVersion = "2.3.0"
+  val quartzVersion = "2.3.0"
 
 }
