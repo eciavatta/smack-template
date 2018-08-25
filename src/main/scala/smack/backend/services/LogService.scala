@@ -4,7 +4,7 @@ import akka.Done
 import akka.actor.{Actor, ActorLogging, Props}
 import com.datastax.driver.core.SimpleStatement
 import smack.cassandra.CassandraDatabase.CassandraStatement
-import smack.common.traits.CassandraController
+import smack.commons.traits.CassandraController
 import smack.kafka.KafkaConsumer
 import smack.models.messages._
 

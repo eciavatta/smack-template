@@ -10,14 +10,14 @@ import com.fasterxml.uuid.Generators
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import smack.backend.controllers.UserController
-import smack.common.mashallers.Marshalling
-import smack.common.utils.Helpers
+import smack.commons.mashallers.Marshalling
+import smack.commons.utils.Helpers
 import smack.commons.utils.DatabaseUtils
 import smack.database.MigrationController
 import smack.database.migrations.{CreateUsersByCredentialsTable, CreateUsersByIdTable}
 import smack.frontend.routes.UserRoute
-import smack.frontend.routes.UserRoute._
 import smack.frontend.server.ValidationDirective.ModelValidationRejection
+import smack.models.Events.{UserCreating, UserUpdating}
 import smack.models.structures.User
 
 class UserControllerSpec extends WordSpec with ScalatestRouteTest with TestKitBase with BeforeAndAfterAll with Matchers with Marshalling {

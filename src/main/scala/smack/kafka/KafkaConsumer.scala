@@ -13,8 +13,9 @@ import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Sink, Source}
 import akka.stream.{AbruptStageTerminationException, ClosedShape}
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteBufferDeserializer, StringDeserializer}
-import smack.common.traits.{AskTimeout, ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
-import smack.common.utils.Helpers
+import smack.commons.traits.{AskTimeout, ContextDispatcher, ImplicitSerialization}
+import smack.commons.utils.Helpers
+import smack.commons.traits.{AskTimeout, ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
 import smack.kafka.KafkaConsumer.TestException
 import smack.models.messages.GenerateException
 

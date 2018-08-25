@@ -10,13 +10,13 @@ import com.fasterxml.uuid.Generators
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import smack.backend.controllers.SiteController
-import smack.common.mashallers.Marshalling
-import smack.common.utils.Helpers
+import smack.commons.mashallers.Marshalling
+import smack.commons.utils.Helpers
 import smack.commons.utils.DatabaseUtils
 import smack.database.MigrationController
 import smack.database.migrations._
 import smack.frontend.routes.SiteRoute
-import smack.frontend.routes.SiteRoute.{SiteCreating, SiteDeleting, SiteUpdating, SitesListing}
+import smack.models.Events.{SiteCreating, SiteDeleting, SiteUpdating, SitesListing}
 import smack.models.structures.Site
 
 class SiteControllerSpec extends WordSpec with ScalatestRouteTest with TestKitBase with BeforeAndAfterAll with Matchers with Marshalling {

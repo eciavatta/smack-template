@@ -2,7 +2,7 @@ import sbt.file
 import sbtassembly.{AssemblyKeys, MergeStrategy}
 
 val projectName = "smack-template"
-val projectVersion = "0.2.0-SNAPSHOT"
+val projectVersion = "0.3.0-SNAPSHOT"
 val projectOrganization = "it.eciavatta"
 
 // add scalastyle to compile task
@@ -11,45 +11,73 @@ lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
 lazy val root = Project(
   id = projectName,
   base = file(".")
-).enablePlugins(BuildInfoPlugin)
-  .enablePlugins(AssemblyPlugin)
+) .enablePlugins(AssemblyPlugin)
   .enablePlugins(DockerPlugin)
   .enablePlugins(MultiJvmPlugin)
-  .settings(buildInfoSettings: _*)
   .settings(assemblySettings: _*)
   .settings(dockerSettings: _*)
   .configs(MultiJvm)
+  .settings(commonSettings)
   .settings(
     name := projectName,
-    version := projectVersion,
-    organization := projectOrganization,
 
-    (compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value,
-    compileScalastyle := scalastyle.in(Compile).toTask("").value,
-    conflictManager in ThisBuild := ConflictManager.all,
-    parallelExecution in Test := false,
-    scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
-    updateOptions := updateOptions.value.withCachedResolution(true),
-    libraryDependencies ++= Dependencies.dependencies,
+    libraryDependencies ++= Dependencies.rootDependencies,
     scalaVersion := "2.12.6",
-    test in assembly := {},
-    coverageEnabled := true,
-    fork in Test := true,
+
+    mainClass in assembly := Some("smack.entrypoints.Main"),
+    assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
+  ).dependsOn(analysis, commons, client, migrate % "compile->compile;test->test")
+
+lazy val commonSettings = Seq(
+  version := projectVersion,
+  organization := projectOrganization,
+
+  (compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value,
+  compileScalastyle := scalastyle.in(Compile).toTask("").value,
+  conflictManager in ThisBuild := ConflictManager.all,
+  parallelExecution in Test := false,
+  scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
+  updateOptions := updateOptions.value.withCachedResolution(true),
+
+  test in assembly := {},
+  coverageEnabled := true,
+  fork in Test := true,
+)
+
+lazy val analysis = module("analysis").dependsOn(commons)
+  .settings(
+    scalaVersion := "2.12.6",
+  )
+
+lazy val client = module("client").dependsOn(commons)
+  .settings(
+    scalaVersion := "2.12.6",
+    libraryDependencies ++= Dependencies.clientDependencies
+  )
+
+lazy val commons = module("commons")
+  .settings(
+    scalaVersion := "2.12.6",
+    libraryDependencies ++= Dependencies.commonsDependencies,
 
     PB.targets in Compile := Seq(
       scalapb.gen() -> (sourceManaged in Compile).value / "protobuf"
     ),
-    PB.includePaths in Compile += file("model/src/main/protobuf"),
+    PB.includePaths in Compile += file("commons/src/main/protobuf"),
+  )
+  .enablePlugins(BuildInfoPlugin)
+  .settings(buildInfoSettings: _*)
 
-    mainClass in assembly := Some("smack.entrypoints.Main"),
-    assemblyJarName in assembly := s"${name.value}-${version.value}.jar"
+lazy val migrate = module("migrate").dependsOn(commons)
+  .settings(
+    libraryDependencies ++= Dependencies.migrateDependencies
   )
 
 evictionWarningOptions in update := EvictionWarningOptions.default.withWarnTransitiveEvictions(false)
   .withWarnDirectEvictions(false).withWarnScalaVersionEviction(false)
 
 lazy val buildInfoSettings = Seq(
-  buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+  buildInfoKeys := Seq[BuildInfoKey]("name" -> projectName, version, scalaVersion, sbtVersion),
   buildInfoPackage := "smack"
 )
 
@@ -98,3 +126,7 @@ val aopMerge: MergeStrategy = new MergeStrategy {
     Right(Seq(file -> path))
   }
 }
+
+def module(name: String): Project =
+  Project(id = name, base = file(name))
+    .settings(commonSettings: _*)

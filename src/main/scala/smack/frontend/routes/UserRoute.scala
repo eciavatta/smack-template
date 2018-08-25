@@ -7,11 +7,10 @@ import com.typesafe.config.Config
 import smack.frontend.server.RestRoute
 import smack.frontend.server.ValidationDirective._
 import smack.frontend.validation.ValidationRules._
+import smack.models.Events.{UserCreating, UserUpdating}
 import smack.models.messages._
-import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 case class UserRoute(backendRouter: ActorRef)(implicit val config: Config) extends RestRoute {
-  import smack.frontend.routes.UserRoute._
 
   private val minPasswordLength = 6
 
@@ -39,14 +38,4 @@ case class UserRoute(backendRouter: ActorRef)(implicit val config: Config) exten
         }
       }
     }
-}
-
-object UserRoute extends DefaultJsonProtocol {
-
-  case class UserCreating(email: String, password: String, fullName: String)
-  case class UserUpdating(fullName: String)
-
-  implicit val userCreatingFormat: RootJsonFormat[UserCreating] = jsonFormat3(UserCreating.apply)
-  implicit val userUpdatingFormat: RootJsonFormat[UserUpdating] = jsonFormat1(UserUpdating.apply)
-
 }

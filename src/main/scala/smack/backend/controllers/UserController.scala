@@ -6,9 +6,9 @@ import com.fasterxml.uuid.Generators
 import com.typesafe.config.Config
 import smack.backend.controllers.UserController.EmailAlreadyExistsException
 import smack.cassandra.CassandraDatabase.CassandraStatement
-import smack.common.traits.CassandraController
-import smack.common.traits.Controller.NotFoundException
-import smack.common.utils.{Converters, Helpers}
+import smack.commons.traits.Controller.NotFoundException
+import smack.commons.utils.{Converters, Helpers}
+import smack.commons.traits.CassandraController
 import smack.models.messages._
 import smack.models.structures.{Date, ResponseStatus, User}
 

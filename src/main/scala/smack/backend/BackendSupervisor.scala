@@ -3,7 +3,7 @@ package smack.backend
 import akka.actor.SupervisorStrategy.Resume
 import akka.actor.{Actor, ActorLogging, OneForOneStrategy, Props}
 import smack.backend.controllers.{LogController, SiteController, UserController}
-import smack.common.serialization.MessageSerializer.{SiteRequest, UserRequest}
+import smack.commons.serialization.MessageSerializer.{SiteRequest, UserRequest}
 import smack.models.messages.TraceLogRequest
 
 class BackendSupervisor extends Actor with ActorLogging {

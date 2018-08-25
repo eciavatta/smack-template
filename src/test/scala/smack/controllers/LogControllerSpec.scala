@@ -17,14 +17,14 @@ import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.apache.kafka.common.serialization.{ByteBufferDeserializer, Deserializer, StringDeserializer}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpec}
 import smack.backend.controllers.LogController
-import smack.common.mashallers.Marshalling
-import smack.common.utils.Helpers
+import smack.commons.mashallers.Marshalling
+import smack.commons.utils.Helpers
 import smack.commons.utils.DatabaseUtils
 import smack.database.MigrationController
 import smack.database.migrations.CreateSitesByTrackingIdTable
 import smack.frontend.routes.LogRoute
-import smack.frontend.routes.LogRoute.LogEvent
 import smack.kafka.ProtobufSerialization
+import smack.models.Events.LogEvent
 import smack.models.messages.TraceLogRequest
 
 import scala.concurrent.duration._

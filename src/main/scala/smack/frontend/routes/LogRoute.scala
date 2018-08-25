@@ -6,11 +6,10 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import com.typesafe.config.Config
 import smack.frontend.server.RestRoute
+import smack.models.Events.LogEvent
 import smack.models.messages.{TraceLogRequest, TraceLogResponse}
-import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 case class LogRoute(backendRouter: ActorRef)(implicit val config: Config) extends RestRoute {
-  import LogRoute._
 
   override def route: Route =
     pathPrefix("logs" / Segment) { trackingId =>
@@ -22,12 +21,4 @@ case class LogRoute(backendRouter: ActorRef)(implicit val config: Config) extend
         }
       }
     }
-}
-
-object LogRoute extends DefaultJsonProtocol {
-
-  case class LogEvent(url: String, ipAddress: String, userAgent: String)
-
-  implicit val logEventFormat: RootJsonFormat[LogEvent] = jsonFormat3(LogEvent.apply)
-
 }

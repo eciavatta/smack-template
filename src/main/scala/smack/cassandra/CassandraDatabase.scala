@@ -8,8 +8,9 @@ import akka.stream.{AbruptStageTerminationException, ClosedShape, OverflowStrate
 import com.datastax.driver.core.{Cluster, ResultSet, Session, Statement}
 import smack.cassandra.CassandraDatabase._
 import smack.cassandra.ScalaConverters._
-import smack.common.traits.{AskTimeout, ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
-import smack.common.utils.Helpers
+import smack.commons.traits.{AskTimeout, ContextDispatcher, ImplicitSerialization}
+import smack.commons.utils.Helpers
+import smack.commons.traits.{AskTimeout, ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
 import smack.models.messages.GenerateException
 
 import scala.collection.JavaConverters._

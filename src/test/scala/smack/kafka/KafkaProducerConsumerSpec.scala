@@ -10,7 +10,7 @@ import com.typesafe.config.ConfigFactory
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.apache.kafka.common.serialization._
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpecLike}
-import smack.common.traits.AfterAllShutdown
+import smack.commons.traits.AfterAllShutdown
 import smack.kafka.KafkaProducer.{SerializationException, TestException}
 import smack.models.messages.{GenerateException, TestRequest}
 

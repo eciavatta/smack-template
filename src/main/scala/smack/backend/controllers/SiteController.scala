@@ -4,9 +4,9 @@ import akka.actor.{Actor, ActorLogging, Props}
 import com.datastax.driver.core.{BatchStatement, SimpleStatement}
 import com.fasterxml.uuid.Generators
 import smack.cassandra.CassandraDatabase.CassandraStatement
-import smack.common.traits.CassandraController
-import smack.common.traits.Controller.NotFoundException
-import smack.common.utils.Converters
+import smack.commons.traits.Controller.NotFoundException
+import smack.commons.utils.Converters
+import smack.commons.traits.CassandraController
 import smack.models.messages._
 import smack.models.structures.{Date, Site}
 

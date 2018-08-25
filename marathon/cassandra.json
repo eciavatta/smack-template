@@ -1,0 +1,29 @@
+{
+    "id": "cassandra",
+    "cmd": "/opt/kafka/bin/kafka-server-start.sh -Dbroker.id=$RANDOM -Dzookeeper.connect=$ZK_ADDRESS/kafka config/server.properties",
+    "constraints": [["hostname", "UNIQUE"]],
+    "cpus": 1,
+    "env": {
+        "JMX_PORT": "$PORT_JMX"
+    },
+    "healthChecks": [{
+        "portIndex": 0,
+        "protocol": "MESOS_TCP",
+        "gracePeriodSeconds": 300,
+        "intervalSeconds": 60,
+        "timeoutSeconds": 20,
+        "maxConsecutiveFailures": 3
+    }],
+    "mem": 1024,
+    "networks": [{
+        "mode": "host"
+    }],
+    "portDefinitions": [{
+        "port": 9092,
+        "name": "kafka"
+    },
+    {
+        "port": 9093,
+        "name": "jmx"
+    }]
+}

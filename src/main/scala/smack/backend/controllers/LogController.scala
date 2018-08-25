@@ -9,9 +9,10 @@ import com.datastax.driver.core.SimpleStatement
 import com.google.common.cache.CacheBuilder
 import com.typesafe.config.Config
 import smack.cassandra.CassandraDatabase.CassandraStatement
-import smack.common.traits.Controller.NotFoundException
-import smack.common.traits.{CassandraController, KafkaController}
-import smack.common.utils.Helpers
+import smack.commons.traits.Controller.NotFoundException
+import smack.commons.traits.KafkaController
+import smack.commons.utils.Helpers
+import smack.commons.traits.{CassandraController, KafkaController}
 import smack.models.messages._
 
 import scala.collection.JavaConverters._

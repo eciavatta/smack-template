@@ -9,9 +9,9 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.Config
-import smack.common.mashallers.Marshalling
-import smack.common.serialization.MessageSerializer.{RequestMessage, ResponseMessage}
-import smack.common.utils.{Converters, Helpers}
+import smack.commons.mashallers.Marshalling
+import smack.commons.serialization.MessageSerializer.{RequestMessage, ResponseMessage}
+import smack.commons.utils.{Converters, Helpers}
 import smack.models.structures.ResponseStatus
 
 import scala.reflect.ClassTag

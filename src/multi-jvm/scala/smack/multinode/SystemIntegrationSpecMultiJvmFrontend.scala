@@ -18,16 +18,16 @@ import com.typesafe.config.Config
 import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
 import org.apache.kafka.common.serialization._
 import smack.backend.BackendSupervisor
-import smack.common.mashallers.Marshalling
-import smack.common.traits.STMultiNodeSpec
-import smack.common.utils.SystemIntegrationConfig.SystemIntegrationMultiNodeConfig._
-import smack.common.utils.SystemIntegrationConfig._
+import smack.commons.mashallers.Marshalling
+import smack.commons.traits.STMultiNodeSpec
 import smack.commons.utils.DatabaseUtils
+import smack.commons.utils.SystemIntegrationConfig.SystemIntegrationMultiNodeConfig._
+import smack.commons.utils.SystemIntegrationConfig._
 import smack.database.MigrationController
 import smack.database.migrations.{CreateLogsTable, CreateUsersByCredentialsTable, CreateUsersByIdTable}
-import smack.frontend.routes.UserRoute.UserCreating
 import smack.frontend.server.WebServer
 import smack.kafka.ProtobufSerialization
+import smack.models.Events.UserCreating
 import smack.models.messages.TraceLogRequest
 import smack.models.structures.User
 

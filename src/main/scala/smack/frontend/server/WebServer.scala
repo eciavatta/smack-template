@@ -11,7 +11,7 @@ import akka.pattern.AskTimeoutException
 import akka.routing.FromConfig
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
-import smack.common.utils.Helpers
+import smack.commons.utils.Helpers
 import smack.frontend.routes.RegisteredRoutes
 import smack.frontend.server.ValidationDirective._
 
