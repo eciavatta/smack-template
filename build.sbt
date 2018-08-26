@@ -92,7 +92,7 @@ lazy val migrate = module("migrate").dependsOn(commons)
   .settings(assemblySettings: _*)
 
 lazy val buildInfoSettings = Seq(
-  buildInfoKeys := Seq[BuildInfoKey]("name" -> projectName, version, scalaVersion, sbtVersion),
+  buildInfoKeys := Seq[BuildInfoKey]("name" -> s"$projectName-${name.value}", version, scalaVersion, sbtVersion),
   buildInfoPackage := "smack"
 )
 

@@ -40,7 +40,7 @@ object Main extends EntryPoint[Main] {
        """.stripMargin)
       .withFallback(ConfigFactory.parseResources(s"${params.role}.conf"))
       .withFallback(ConfigFactory.parseResources("application.conf"))
-      .withFallback(ConfigFactory.parseResources(s"smack-${params.environment}.conf")).resolve()
+      .withFallback(ConfigFactory.parseResources(s"commons-${params.environment}.conf")).resolve()
 
     val system: ActorSystem = ActorSystem(config.getString("smack.name"), config)
     ZookeeperClusterSeed(system).join()

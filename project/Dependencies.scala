@@ -39,10 +39,10 @@ object Dependencies {
   val kafkaClients    = "org.apache.kafka"           %  "kafka-clients"             % kafkaClientsVersion
 
   // analysis dependenies
-  val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion exclude("io.netty", "netty-all")
-  val sparkCore       = "org.apache.spark"           %% "spark-core"                % sparkVersion exclude("commons-beanutils", "commons-beanutils")
+  val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion             nettyAllExclude()
+  val sparkCore       = "org.apache.spark"           %% "spark-core"                % sparkVersion             commonsBeanutilsExclude()
   val sparkSql        = "org.apache.spark"           %% "spark-sql"                 % sparkVersion             jacksonCoreExclude()
-  val quartz          = "org.quartz-scheduler"       % "quartz"                     % quartzVersion slf4jExclude()
+  val quartz          = "org.quartz-scheduler"       % "quartz"                     % quartzVersion            slf4jExclude()
 
   val rootDependencies= Seq(akkaActor, akkaCluster, akkaClusterSeed, akkaHttp, akkaMetrics, akkaRemote, akkaSprayJson, akkaStream, akkaStreamKafka,
                              cassandraDriver, kamonAkkaRemote, kamonDatadog, kamonExecutors, scopt, uuidGenerator,
@@ -51,11 +51,11 @@ object Dependencies {
 
   val analysisDependencies = Seq(sparkCassandra, sparkCore, scopt, quartz)
 
-  val clientDependencies = Seq(akkaActor, akkaActor, akkaHttp, akkaSprayJson, akkaStream, scopt)
+  val clientDependencies = Seq(akkaActor, akkaHttp, akkaSprayJson, akkaStream, scopt)
 
   val commonsDependencies = Seq(akkaActor, akkaStream, akkaSprayJson, sentry, scalapb, scopt)
 
-  val migrateDependencies = Seq(akkaActor, cassandraDriver, akkaTestkit, scalatest, scopt)
+  val migrateDependencies = Seq(akkaActor, cassandraDriver, akkaTestkit, scalatest, scopt, guava)
 
   implicit class Exclusions(module: ModuleID) {
 
@@ -66,10 +66,12 @@ object Dependencies {
       .exclude("com.typesafe.akka", "akka-stream_2.12")
     def akkaTestKitExclude(): ModuleID = module.exclude("com.typesafe.akka", "akka-testkit_2.12")
     def configExclude(): ModuleID = module.exclude("com.typesafe", "config")
+    def commonsBeanutilsExclude(): ModuleID = module.exclude("commons-beanutils", "commons-beanutils")
     def guavaExclude(): ModuleID = module.exclude("com.google.guava", "guava")
     def jacksonCoreExclude(): ModuleID = module.exclude("com.fasterxml.jackson.core", "jackson-core")
     def kafkaClientsExclude(): ModuleID = module.exclude("org.apache.kafka", "kafka-clients")
     def kamonCoreExclude(): ModuleID = module.exclude("io.kamon", "kamon-core_2.12")
+    def nettyAllExclude(): ModuleID = module.exclude("io.netty", "netty-all")
     def nettyExclude(): ModuleID = module.exclude("io.netty", "netty")
     def slf4jExclude(): ModuleID = module.exclude("org.slf4j", "slf4j-api")
     def snappyExclude(): ModuleID = module.exclude("org.xerial.snappy", "snappy-java")

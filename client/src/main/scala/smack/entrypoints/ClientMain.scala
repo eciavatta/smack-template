@@ -32,7 +32,7 @@ object ClientMain extends EntryPoint[ClientMain] {
     system.actorOf(WebClient.props, WebClient.name)
   }
 
-  override protected def argumentParser: OptionParser[ClientMain] = new scopt.OptionParser[ClientMain](s"${BuildInfo.name}-client") {
+  override protected def argumentParser: OptionParser[ClientMain] = new scopt.OptionParser[ClientMain](BuildInfo.name) {
     head(BuildInfo.name, BuildInfo.version)
 
     opt[Long]('c', "count").optional()

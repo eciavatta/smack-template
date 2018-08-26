@@ -25,7 +25,7 @@ object MigrateMain extends EntryPoint[MigrateMain] {
          |smack.cassandra.contact-point.port = ${cassandraRegex.group(2)}
          |smack.sentry.dns = "${params.sentryDns.fold("")(identity)}"
        """.stripMargin)
-      .withFallback(ConfigFactory.parseResources(s"smack-${params.environment}.conf")).resolve()
+      .withFallback(ConfigFactory.parseResources(s"commons-${params.environment}.conf")).resolve()
 
     val system: ActorSystem = ActorSystem(config.getString("smack.name"), config)
     val migrationController = MigrationController.createMigrationController(system)
@@ -55,7 +55,7 @@ object MigrateMain extends EntryPoint[MigrateMain] {
     system.terminate()
   }
 
-  override protected def argumentParser: OptionParser[MigrateMain] = new scopt.OptionParser[MigrateMain](s"${BuildInfo.name}-migrate") {
+  override protected def argumentParser: OptionParser[MigrateMain] = new scopt.OptionParser[MigrateMain](BuildInfo.name) {
     head(BuildInfo.name, BuildInfo.version)
 
     opt[String]('c', "cassandra-bootstrap").optional()

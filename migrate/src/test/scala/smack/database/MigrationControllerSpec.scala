@@ -11,7 +11,7 @@ import scala.util.{Failure, Success}
 
 class MigrationControllerSpec extends TestKitBase with WordSpecLike with BeforeAndAfterAll with Matchers {
 
-  implicit lazy val config: Config = ConfigFactory.load("test")
+  implicit lazy val config: Config = ConfigFactory.load("commons-testing")
   lazy val system: ActorSystem = ActorSystem("migrationControllerSpec", config)
 
   override def afterAll(): Unit = {

@@ -10,7 +10,7 @@ import scala.util.Success
 
 class ProjectMigrationsSpec extends TestKitBase with WordSpecLike with BeforeAndAfterAll with Matchers {
 
-  implicit lazy val config: Config = ConfigFactory.load("test")
+  implicit lazy val config: Config = ConfigFactory.load("commons-testing")
   lazy val system: ActorSystem = ActorSystem("projectMigrationsSpec", config)
 
   override def afterAll(): Unit = {
