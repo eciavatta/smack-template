@@ -11,7 +11,7 @@ trait Marshalling extends DefaultJsonProtocol {
 
   implicit object DateJsonFormat extends RootJsonFormat[Date] {
 
-    private val dateFormat = new SimpleDateFormat(ConfigFactory.load("smack").getString("smack.dateFormat"))
+    private val dateFormat = new SimpleDateFormat(ConfigFactory.load("serialization").getString("smack.dateFormat"))
 
     override def write(obj: Date): JsValue = JsString(dateFormat.format(obj.timestamp))
 

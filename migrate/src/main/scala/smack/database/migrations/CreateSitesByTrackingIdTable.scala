@@ -10,7 +10,8 @@ object CreateSitesByTrackingIdTable extends Migration {
     s"""
        |CREATE TABLE sites_by_tracking_id (
        |  tracking_id UUID PRIMARY KEY,
-       |  site_id TIMEUUID);
+       |  site_id     TIMEUUID
+       |);
      """.stripMargin
 
   override def down: String = s"DROP TABLE IF EXISTS sites_by_tracking_id"

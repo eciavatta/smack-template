@@ -9,10 +9,11 @@ object CreateSitesByIdTable extends Migration {
   override def up: String =
     s"""
        |CREATE TABLE sites_by_id (
-       |  id TIMEUUID PRIMARY KEY,
-       |  domain TEXT,
-       |  user_id TIMEUUID,
-       |  tracking_id UUID);
+       |  id          TIMEUUID PRIMARY KEY,
+       |  domain      TEXT,
+       |  user_id     TIMEUUID,
+       |  tracking_id UUID
+       |);
      """.stripMargin
 
   override def down: String = s"DROP TABLE IF EXISTS sites_by_id"

@@ -9,9 +9,10 @@ object CreateUsersByIdTable extends Migration {
   override def up: String =
     s"""
        |CREATE TABLE users_by_id (
-       |  id TIMEUUID PRIMARY KEY,
-       |  email TEXT,
-       |  full_name TEXT);
+       |  id        TIMEUUID PRIMARY KEY,
+       |  email     TEXT,
+       |  full_name TEXT
+       |);
      """.stripMargin
 
   override def down: String = s"DROP TABLE IF EXISTS users_by_id"

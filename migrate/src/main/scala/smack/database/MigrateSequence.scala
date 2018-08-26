@@ -10,7 +10,12 @@ object MigrateSequence {
     CreateSitesByIdTable,
     CreateSitesByTrackingIdTable,
     CreateSitesByUsersTable,
-    CreateLogsTable
+    CreateLogsTable,
+    CreatePartialStatsTable,
+    CreatePartialStatsUrlTable,
+    CreateGlobalStatsTable,
+    CreateGlobalStatsUrlTable,
+    CreateStatsReferenceTable
   )
 
 }

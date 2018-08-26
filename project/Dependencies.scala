@@ -20,6 +20,7 @@ object Dependencies {
   val kamonExecutors  = "io.kamon"                   %% "kamon-executors"           % kamonExecutorsVersion    configExclude() sourceCodeExclude()
   val scopt           = "com.github.scopt"           %% "scopt"                     % scoptVersion
   val sentry          = "io.sentry"                  %  "sentry"                    % sentryVersion            jacksonCoreExclude() slf4jExclude()
+  val sentryLog4j     = "io.sentry"                  %  "sentry-log4j"              % sentryVersion
   val uuidGenerator   = "com.fasterxml.uuid"         %  "java-uuid-generator"       % uuidGeneratorVersion
 
   // project test depedencies
@@ -39,17 +40,19 @@ object Dependencies {
   val kafkaClients    = "org.apache.kafka"           %  "kafka-clients"             % kafkaClientsVersion
 
   // analysis dependenies
+  val nanoHttpd       = "org.nanohttpd"              %  "nanohttpd"                 % nanoHttpdVersion
+  val quartz          = "org.quartz-scheduler"       %  "quartz"                    % quartzVersion            slf4jExclude()
   val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion             nettyAllExclude()
   val sparkCore       = "org.apache.spark"           %% "spark-core"                % sparkVersion             commonsBeanutilsExclude()
   val sparkSql        = "org.apache.spark"           %% "spark-sql"                 % sparkVersion             jacksonCoreExclude()
-  val quartz          = "org.quartz-scheduler"       % "quartz"                     % quartzVersion            slf4jExclude()
+
 
   val rootDependencies= Seq(akkaActor, akkaCluster, akkaClusterSeed, akkaHttp, akkaMetrics, akkaRemote, akkaSprayJson, akkaStream, akkaStreamKafka,
                              cassandraDriver, kamonAkkaRemote, kamonDatadog, kamonExecutors, scopt, uuidGenerator,
                              akkaHttpTestkit, akkaMulTestkit, akkaTestkit, embeddedKafka, scalacheck, scalatest,
                              guava, jacksonCore, kafkaClients)
 
-  val analysisDependencies = Seq(sparkCassandra, sparkCore, scopt, quartz)
+  val analysisDependencies = Seq(sparkCassandra, sparkCore, scopt, quartz, sentry, sentryLog4j, nanoHttpd)
 
   val clientDependencies = Seq(akkaActor, akkaHttp, akkaSprayJson, akkaStream, scopt)
 

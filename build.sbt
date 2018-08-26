@@ -22,11 +22,9 @@ lazy val root = Project(
   .settings(commonSettings)
   .settings(
     name := projectName,
-
     libraryDependencies ++= Dependencies.rootDependencies,
-    scalaVersion := akkaScalaVersion,
-
     mainClass in assembly := Some("smack.entrypoints.Main"),
+    scalaVersion := akkaScalaVersion
   )
   .dependsOn(commons, migrate % "test->test")
   .aggregate(analysis, client, migrate)
@@ -53,26 +51,26 @@ lazy val commonSettings = Seq(
 
 lazy val analysis = module("analysis")
   .settings(
-    scalaVersion := sparkScalaVersion,
     libraryDependencies ++= Dependencies.analysisDependencies,
     mainClass in assembly := Some("smack.entrypoints.AnalysisMain"),
+    scalaVersion := sparkScalaVersion,
   )
   .enablePlugins(AssemblyPlugin)
   .settings(assemblySparkSettings: _*)
 
 lazy val client = module("client").dependsOn(commons)
   .settings(
-    scalaVersion := akkaScalaVersion,
     libraryDependencies ++= Dependencies.clientDependencies,
     mainClass in assembly := Some("smack.entrypoints.ClientMain"),
+    scalaVersion := akkaScalaVersion,
   )
   .enablePlugins(AssemblyPlugin)
   .settings(assemblySettings: _*)
 
 lazy val commons = module("commons")
   .settings(
-    scalaVersion := akkaScalaVersion,
     libraryDependencies ++= Dependencies.commonsDependencies,
+    scalaVersion := akkaScalaVersion,
 
     PB.targets in Compile := Seq(
       scalapb.gen() -> (sourceManaged in Compile).value / "protobuf"
@@ -84,9 +82,9 @@ lazy val commons = module("commons")
 
 lazy val migrate = module("migrate").dependsOn(commons)
   .settings(
-    scalaVersion := akkaScalaVersion,
     libraryDependencies ++= Dependencies.migrateDependencies,
     mainClass in assembly := Some("smack.entrypoints.MigrateMain"),
+    scalaVersion := akkaScalaVersion,
   )
   .enablePlugins(AssemblyPlugin)
   .settings(assemblySettings: _*)

@@ -13,12 +13,13 @@ object Versions {
   val kamonAkkaRemoteVersion = "1.1.0"
   val kamonDatadogVersion = "1.0.0"
   val kamonExecutorsVersion = "1.0.1"
+  val nanoHttpdVersion = "2.3.1"
+  val quartzVersion = "2.3.0"
   val scalaCheckVersion = "1.14.0"
   val scalaTestVersion = "3.0.5"
   val scoptVersion = "3.7.0"
   val sentryVersion = "1.7.5"
-  val uuidGeneratorVersion = "3.1.5"
   val sparkVersion = "2.3.0"
-  val quartzVersion = "2.3.0"
+  val uuidGeneratorVersion = "3.1.5"
 
 }
