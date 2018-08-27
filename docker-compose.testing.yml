@@ -1,0 +1,35 @@
+# For detailed information about docker-compose visit https://docs.docker.com/compose/
+# To start all docker containers required to execute the tests locally run:
+# docker-compose up
+
+version: '2'
+services:
+  frontend:
+    image: eciavatta/smack-template:latest
+    command: -d true -l DEBUG -a zookeeper:2181/akka frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - "migrate"
+
+  backend:
+    image: eciavatta/smack-template:latest
+    command: -d true -l DEBUG -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 backend
+    depends_on:
+      - "migrate"
+      - "kafka"
+      - "cassandra"
+
+  service:
+    image: eciavatta/smack-template:latest
+    command: -d true -l DEBUG -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 service
+    depends_on:
+      - "migrate"
+      - "kafka"
+      - "cassandra"
+
+  migrate:
+    image: eciavatta/smack-template:latest
+    command: migrate --create-keyspace -d false -l DEBUG -c cassandra:9042
+    depends_on:
+      - "cassandra"

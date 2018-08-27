@@ -1,9 +1,11 @@
 import sbt.file
+import sbtassembly.AssemblyPlugin.defaultUniversalScript
 import sbtassembly.{AssemblyKeys, MergeStrategy}
 
 val projectName = "smack-template"
 val projectVersion = "0.3.0-SNAPSHOT"
 val projectOrganization = "it.eciavatta"
+val dockerUser = "eciavatta"
 val akkaScalaVersion = "2.12.6"
 val sparkScalaVersion = "2.11.12"
 
@@ -48,7 +50,7 @@ lazy val commonSettings = Seq(
   updateOptions := updateOptions.value.withCachedResolution(true),
 
   test in assembly := {},
-  coverageEnabled := true,
+  coverageEnabled := false,
   fork in Test := true,
 
   evictionWarningOptions in update := EvictionWarningOptions.default.withWarnTransitiveEvictions(false)
@@ -97,6 +99,7 @@ lazy val migrate = module("migrate").dependsOn(commons)
   .settings(assemblySettings: _*)
 
 lazy val assemblySettings = Seq(
+  assemblyOption in assembly := (assemblyOption in assembly).value.copy(prependShellScript = Some(defaultUniversalScript(shebang = false))),
   assemblyMergeStrategy in assembly := {
     case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
     case PathList("META-INF", "aop.xml") => aopMerge
@@ -133,15 +136,21 @@ lazy val assemblyAnalyticsSettings = Seq(
 
 lazy val dockerSettings = Seq(
   docker := (docker dependsOn assembly).value,
-  imageNames in docker := Seq(ImageName(s"${name.value}:latest")),
+  imageNames in docker := Seq(ImageName(s"$dockerUser/$projectName:$projectVersion"), ImageName(s"$dockerUser/$projectName:latest")),
   dockerfile in docker := {
-    val artifact = (AssemblyKeys.assemblyOutputPath in assembly).value
-    val artifactTargetPath = s"/app/${artifact.name}"
+    val mainArtifact = (AssemblyKeys.assemblyOutputPath in assembly).value
+    val clientArtifact = ((AssemblyKeys.assemblyOutputPath in client) / assembly).value
+    val analysisArtifact = ((AssemblyKeys.assemblyOutputPath in analysis) / assembly).value
+    val migrateArtifact = ((AssemblyKeys.assemblyOutputPath in migrate) / assembly).value
+    val aspectWeaverArtifact = file("agents/aspectjweaver-1.9.1.jar")
+    val runScript = file("scripts/smack-run")
+
     new sbtdocker.mutable.Dockerfile {
-      from("java8:latest")
-      copy(file("agents/aspectjweaver-1.9.1.jar"), "/app/aspectjweaver.jar")
-      copy(artifact, artifactTargetPath)
-      entryPoint("java", "-javaagent:/app/aspectjweaver.jar", "-cp", artifactTargetPath, "smack.entrypoints.Main")
+      from("openjdk:8u181-jre")
+      copy(Seq(aspectWeaverArtifact, mainArtifact, clientArtifact, analysisArtifact, migrateArtifact, aspectWeaverArtifact, runScript), "/app/")
+      // env("JAVA_AGENTS", s"/app/${aspectWeaverArtifact.name}")
+      env("VERSION", projectVersion)
+      entryPoint("/app/smack-run")
     }
   }
 )

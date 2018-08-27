@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+# This script is taken and re-adapted from spark-2.3.1/bin/spark-class
+
+# Find the java binary
+if [ -n "${JAVA_HOME}" ]; then
+  RUNNER="${JAVA_HOME}/bin/java"
+else
+  if [ "$(command -v java)" ]; then
+    RUNNER="java"
+  else
+    echo "JAVA_HOME is not set" >&2
+    exit 1
+  fi
+fi
+
+# Find the package and the main
+APP_PATH=/app/
+if [ "$1" == "client" ]; then
+  LAUNCH_JAR="${APP_PATH}smack-client-$VERSION.jar"
+  LAUNCH_MAIN=smack.entrypoints.ClientMain
+  ARGS="${@:2}"
+elif [ "$1" == "migrate" ]; then
+  LAUNCH_JAR="${APP_PATH}smack-migrate-$VERSION.jar"
+  LAUNCH_MAIN=smack.entrypoints.MigrateMain
+  ARGS="${@:2}"
+elif [ "$1" == "analysis" ]; then
+  LAUNCH_JAR="${APP_PATH}smack-analysis-$VERSION.jar"
+  LAUNCH_MAIN=smack.entrypoints.AnalysisMain
+  ARGS="${@:2}"
+else
+  LAUNCH_JAR="${APP_PATH}smack-template-$VERSION.jar"
+  LAUNCH_MAIN=smack.entrypoints.Main
+  ARGS="$@"
+fi
+
+if [ ! -z "$JAVA_AGENTS" ]; then
+  JAVA_OPT_AGENTS="-javaagent:$JAVA_AGENTS"
+else
+  JAVA_OPT_AGENTS=""
+fi
+
+# The launcher library will print arguments separated by a NULL character, to allow arguments with
+# characters that would be otherwise interpreted by the shell. Read that in a while loop, populating
+# an array that will be used to exec the final command.
+#
+# The exit code of the launcher is appended to the output, so the parent shell removes it from the
+# command array and checks the value to see if the launcher succeeded.
+build_command() {
+  $RUNNER -Xmx128m $JAVA_OPT_AGENTS -cp $LAUNCH_JAR $LAUNCH_MAIN "$@"
+  printf "%d\0" $?
+}
+
+# Turn off posix mode since it does not allow process substitution
+set +o posix
+CMD=()
+while IFS= read -d '' -r ARG; do
+  CMD+=("$ARG")
+done < <(build_command $ARGS)
+
+COUNT=${#CMD[@]}
+LAST=$((COUNT - 1))
+LAUNCHER_EXIT_CODE=${CMD[$LAST]}
+
+# Certain JVM failures result in errors being printed to stdout (instead of stderr), which causes
+# the code that parses the output of the launcher to get confused. In those cases, check if the
+# exit code is an integer, and if it's not, handle it as a special error case.
+if ! [[ $LAUNCHER_EXIT_CODE =~ ^[0-9]+$ ]]; then
+  echo "${CMD[@]}" | head -n-1 1>&2
+  exit 1
+fi
+
+if [ $LAUNCHER_EXIT_CODE != 0 ]; then
+  exit $LAUNCHER_EXIT_CODE
+fi
+
+CMD=("${CMD[@]:0:$LAST}")
+exec "${CMD[@]}"

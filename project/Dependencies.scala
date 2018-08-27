@@ -23,7 +23,7 @@ object Dependencies {
   val sentryLog4j     = "io.sentry"                  %  "sentry-log4j"              % sentryVersion
   val uuidGenerator   = "com.fasterxml.uuid"         %  "java-uuid-generator"       % uuidGeneratorVersion
 
-  // project test depedencies
+  // project test dependencies
   val akkaHttpTestkit = "com.typesafe.akka"          %% "akka-http-testkit"         % akkaHttpVersion   % Test akkaExclude() akkaTestKitExclude()
   val akkaMulTestkit  = "com.typesafe.akka"          %% "akka-multi-node-testkit"   % akkaVersion       % Test
   val akkaTestkit     = "com.typesafe.akka"          %% "akka-testkit"              % akkaVersion       % Test
@@ -31,15 +31,16 @@ object Dependencies {
   val scalacheck      = "org.scalacheck"             %% "scalacheck"                % scalaCheckVersion % Test
   val scalatest       = "org.scalatest"              %% "scalatest"                 % scalaTestVersion  % Test
 
-  // project compile dpendencies
+  // project compile dependencies
   val scalapb         = "com.thesamet.scalapb"       %% "scalapb-runtime"           % scalapbVersion    % "protobuf"
 
-  // project intransitve dependencies
+  // project transitive dependencies
   val guava           = "com.google.guava"           %  "guava"                     % guavaVersion
   val jacksonCore     = "com.fasterxml.jackson.core" %  "jackson-core"              % jacksonCoreVersion
   val kafkaClients    = "org.apache.kafka"           %  "kafka-clients"             % kafkaClientsVersion
+  val logback         = "ch.qos.logback"             %  "logback-classic"           % logbackVersion
 
-  // analysis dependenies
+  // analysis dependencies
   val nanoHttpd       = "org.nanohttpd"              %  "nanohttpd"                 % nanoHttpdVersion
   val quartz          = "org.quartz-scheduler"       %  "quartz"                    % quartzVersion       slf4jExclude()
   val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion        nettyAllExclude() jodaTimeExclude()
@@ -56,9 +57,9 @@ object Dependencies {
 
   val clientDependencies = Seq(akkaActor, akkaHttp, akkaSprayJson, akkaStream, scopt)
 
-  val commonsDependencies = Seq(akkaActor, akkaStream, akkaSprayJson, sentry, scalapb, scopt)
+  val commonsDependencies = Seq(akkaActor, akkaStream, akkaSprayJson, sentry, scalapb, scopt, jacksonCore)
 
-  val migrateDependencies = Seq(akkaActor, cassandraDriver, akkaTestkit, scalatest, scopt, guava)
+  val migrateDependencies = Seq(akkaActor, cassandraDriver, akkaTestkit, scalatest, scopt, guava, logback)
 
   implicit class Exclusions(module: ModuleID) {
 

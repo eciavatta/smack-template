@@ -120,5 +120,5 @@ object MigrateMain extends EntryPoint[MigrateMain] {
 }
 
 case class MigrateMain(cassandra: String = "127.0.0.1:9042", createKeyspace: Boolean = false, debug: Option[Boolean] = None,
-                               environment: String = "development", force: Boolean = false, isReset: Boolean = false, isRollback: Boolean = false,
-                               logLevel: String = "INFO", rollbackSteps: Int = 1, sentryDns: Option[String] = None)
+                       environment: String = "development", force: Boolean = false, isReset: Boolean = false, isRollback: Boolean = false,
+                       logLevel: String = "INFO", rollbackSteps: Int = 1, sentryDns: Option[String] = None)
