@@ -5,7 +5,6 @@ import akka.event.Logging._
 import io.sentry.event.Event.Level
 import io.sentry.event.EventBuilder
 import io.sentry.{SentryClient, SentryClientFactory}
-import smack.BuildInfo
 
 class SentryLogger extends Actor {
 
@@ -13,8 +12,8 @@ class SentryLogger extends Actor {
 
   private var sentry: SentryClient = _
   private val config = Helpers.actorConfig
-  private val version = s"${BuildInfo.name}-${BuildInfo.version}"
-  private val environment = s"scalaVersion: ${BuildInfo.scalaVersion} - sbtVersion: ${BuildInfo.sbtVersion}"
+  private val version = s"${config.getString("smack.name")}-${config.getString("smack.version")}"
+  private val environment = s"scalaVersion: ${config.getString("smack.scala-version")} - sbtVersion: ${config.getString("smack.sbt-version")}"
   private val platform = s"${getProperty("os.name")}_${getProperty("os.version")} - ${getProperty("java.vendor")}_${getProperty("java.version")}"
   private val serverInstance = s"${config.getString("akka.remote.netty.tcp.hostname")}:${config.getString("akka.remote.netty.tcp.port")}"
 

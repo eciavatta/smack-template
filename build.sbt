@@ -19,15 +19,22 @@ lazy val root = Project(
   .settings(assemblySettings: _*)
   .settings(dockerSettings: _*)
   .configs(MultiJvm)
+  .enablePlugins(BuildInfoPlugin)
+  .settings(Seq(
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+    buildInfoPackage := s"smack"
+  ): _*)
   .settings(commonSettings)
   .settings(
-    name := projectName,
+    assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
     libraryDependencies ++= Dependencies.rootDependencies,
     mainClass in assembly := Some("smack.entrypoints.Main"),
-    scalaVersion := akkaScalaVersion
+    name := projectName,
+    scalaVersion := akkaScalaVersion,
   )
   .dependsOn(commons, migrate % "test->test")
   .aggregate(analysis, client, migrate)
+
 
 lazy val commonSettings = Seq(
   version := projectVersion,
@@ -39,7 +46,6 @@ lazy val commonSettings = Seq(
   parallelExecution in Test := false,
   scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
   updateOptions := updateOptions.value.withCachedResolution(true),
-  assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
 
   test in assembly := {},
   coverageEnabled := true,
@@ -51,6 +57,7 @@ lazy val commonSettings = Seq(
 
 lazy val analysis = module("analysis")
   .settings(
+    assemblyJarName in assembly := s"smack-${name.value}-${version.value}.jar",
     libraryDependencies ++= Dependencies.analysisDependencies,
     mainClass in assembly := Some("smack.entrypoints.AnalysisMain"),
     scalaVersion := sparkScalaVersion,
@@ -60,6 +67,7 @@ lazy val analysis = module("analysis")
 
 lazy val client = module("client").dependsOn(commons)
   .settings(
+    assemblyJarName in assembly := s"smack-${name.value}-${version.value}.jar",
     libraryDependencies ++= Dependencies.clientDependencies,
     mainClass in assembly := Some("smack.entrypoints.ClientMain"),
     scalaVersion := akkaScalaVersion,
@@ -77,11 +85,10 @@ lazy val commons = module("commons")
     ),
     PB.includePaths in Compile += file("commons/src/main/protobuf"),
   )
-  .enablePlugins(BuildInfoPlugin)
-  .settings(buildInfoSettings: _*)
 
 lazy val migrate = module("migrate").dependsOn(commons)
   .settings(
+    assemblyJarName in assembly := s"smack-${name.value}-${version.value}.jar",
     libraryDependencies ++= Dependencies.migrateDependencies,
     mainClass in assembly := Some("smack.entrypoints.MigrateMain"),
     scalaVersion := akkaScalaVersion,
@@ -89,10 +96,6 @@ lazy val migrate = module("migrate").dependsOn(commons)
   .enablePlugins(AssemblyPlugin)
   .settings(assemblySettings: _*)
 
-lazy val buildInfoSettings = Seq(
-  buildInfoKeys := Seq[BuildInfoKey]("name" -> s"$projectName-${name.value}", version, scalaVersion, sbtVersion),
-  buildInfoPackage := "smack"
-)
 
 lazy val assemblySettings = Seq(
   assemblyMergeStrategy in assembly := {
@@ -166,6 +169,13 @@ val aopMerge: MergeStrategy = new MergeStrategy {
   }
 }
 
+lazy val buildInfoSettings = Seq(
+  buildInfoKeys := Seq[BuildInfoKey]("name" -> s"smack-${name.value}", version, scalaVersion, sbtVersion),
+  buildInfoPackage := s"smack.${name.value}"
+)
+
 def module(name: String): Project =
   Project(id = name, base = file(name))
     .settings(commonSettings: _*)
+    .enablePlugins(BuildInfoPlugin)
+    .settings(buildInfoSettings: _*)

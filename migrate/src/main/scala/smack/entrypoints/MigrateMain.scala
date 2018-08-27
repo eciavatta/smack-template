@@ -3,9 +3,9 @@ package smack.entrypoints
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import scopt.OptionParser
-import smack.BuildInfo
 import smack.commons.abstracts.EntryPoint
 import smack.database.MigrationController
+import smack.migrate.BuildInfo
 
 import scala.util.{Failure, Success}
 
@@ -16,6 +16,12 @@ object MigrateMain extends EntryPoint[MigrateMain] {
 
     val cassandraRegex = addressPattern.findFirstMatchIn(params.cassandra).get
 
+    val env = params.environment match {
+      case "development" => "dev"
+      case "production" => "prod"
+      case "testing" => "test"
+    }
+
     val config = ConfigFactory.parseString(
       s"""
          |${params.debug.fold("")(debug => s"smack.debug = ${if (debug) "on" else "off"}")}
@@ -24,6 +30,10 @@ object MigrateMain extends EntryPoint[MigrateMain] {
          |smack.cassandra.contact-point.host = "${cassandraRegex.group(1)}"
          |smack.cassandra.contact-point.port = ${cassandraRegex.group(2)}
          |smack.sentry.dns = "${params.sentryDns.fold("")(identity)}"
+         |smack.name = "${BuildInfo.name}-$env"
+         |smack.version = "${BuildInfo.version}"
+         |smack.scala-version = "${BuildInfo.scalaVersion}"
+         |smack.sbt-version = "${BuildInfo.sbtVersion}"
        """.stripMargin)
       .withFallback(ConfigFactory.parseResources(s"commons-${params.environment}.conf")).resolve()
 
@@ -52,7 +62,8 @@ object MigrateMain extends EntryPoint[MigrateMain] {
       }
     }
 
-    system.terminate()
+    import system.dispatcher
+    system.terminate().map(_ => sys.exit(0))
   }
 
   override protected def argumentParser: OptionParser[MigrateMain] = new scopt.OptionParser[MigrateMain](BuildInfo.name) {
@@ -73,7 +84,7 @@ object MigrateMain extends EntryPoint[MigrateMain] {
 
     opt[String]('e', "environment").optional()
       .action((environment, config) => config.copy(environment = environment))
-      .validate(environment => if (Seq("development", "production").contains(environment)) success else failure("undefined environment"))
+      .validate(environment => if (Seq("development", "production", "testing").contains(environment)) success else failure("undefined environment"))
       .text("...")
 
     opt[Boolean]("force")

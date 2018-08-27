@@ -23,6 +23,12 @@ object Main extends EntryPoint[Main] {
     val datadogAgentRegex = addressPattern.findFirstMatchIn(params.datadogAgent).get
     val kafkaRegex = addressPattern.findFirstMatchIn(params.kafka).get
 
+    val env = params.environment match {
+      case "development" => "dev"
+      case "production" => "prod"
+      case "testing" => "test"
+    }
+
     val config = ConfigFactory.parseString(
       s"""
          |${params.debug.fold("")(debug => s"smack.debug = ${if (debug) "on" else "off"}")}
@@ -37,6 +43,10 @@ object Main extends EntryPoint[Main] {
          |smack.cassandra.contact-point.host = "${cassandraRegex.group(1)}"
          |smack.cassandra.contact-point.port = ${cassandraRegex.group(2)}
          |smack.sentry.dns = "${params.sentryDns.fold("")(identity)}"
+         |smack.name = "${BuildInfo.name}-$env"
+         |smack.version = "${BuildInfo.version}"
+         |smack.scala-version = "${BuildInfo.scalaVersion}"
+         |smack.sbt-version = "${BuildInfo.sbtVersion}"
        """.stripMargin)
       .withFallback(ConfigFactory.parseResources(s"${params.role}.conf"))
       .withFallback(ConfigFactory.parseResources("application.conf"))
@@ -93,7 +103,7 @@ object Main extends EntryPoint[Main] {
 
     opt[String]('e', "environment").optional()
       .action((environment, config) => config.copy(environment = environment))
-      .validate(environment => if (Seq("development", "production").contains(environment)) success else failure("undefined environment"))
+      .validate(environment => if (Seq("development", "production", "testing").contains(environment)) success else failure("undefined environment"))
       .text("...")
 
     opt[String]('k', "kafka-bootstrap").optional()

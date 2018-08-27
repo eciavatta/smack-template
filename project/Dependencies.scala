@@ -52,7 +52,7 @@ object Dependencies {
                              akkaHttpTestkit, akkaMulTestkit, akkaTestkit, embeddedKafka, scalacheck, scalatest,
                              guava, jacksonCore, kafkaClients)
 
-  val analysisDependencies = Seq(sparkCassandra, sparkCore, scopt, quartz, sentry, sentryLog4j, nanoHttpd)
+  val analysisDependencies = Seq(sparkCassandra, sparkCore, sparkSql, scopt, quartz, sentry, sentryLog4j, nanoHttpd, uuidGenerator)
 
   val clientDependencies = Seq(akkaActor, akkaHttp, akkaSprayJson, akkaStream, scopt)
 

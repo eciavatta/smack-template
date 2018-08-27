@@ -10,11 +10,11 @@ object CreateStatsReferenceTable extends Migration {
     s"""
        |CREATE TABLE stats_reference (
        |  stat_type        TEXT,
-       |  stat_id          TIMEUUID,
+       |  stat_time        TIMESTAMP,
        |  affected_records BIGINT,
-       |  PRIMARY KEY (stat_type, stat_id)
+       |  PRIMARY KEY (stat_type, stat_time)
        |)
-       |WITH CLUSTERING ORDER BY (stat_id DESC);
+       |WITH CLUSTERING ORDER BY (stat_time DESC);
      """.stripMargin
 
   override def down: String = s"DROP TABLE IF EXISTS stats_reference"

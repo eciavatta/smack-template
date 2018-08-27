@@ -3,8 +3,7 @@ package smack.entrypoints
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import scopt.OptionParser
-import smack.BuildInfo
-import smack.client.WebClient
+import smack.client.{BuildInfo, WebClient}
 import smack.commons.abstracts.EntryPoint
 
 object ClientMain extends EntryPoint[ClientMain] {
@@ -26,6 +25,10 @@ object ClientMain extends EntryPoint[ClientMain] {
          |smack.client.requests-per-second = ${params.requestsPerSecond}
          |smack.client.count = ${params.count}
          |smack.sentry.dns = "${params.sentryDns.fold("")(identity)}"
+         |smack.name = "${BuildInfo.name}"
+         |smack.version = "${BuildInfo.version}"
+         |smack.scala-version = "${BuildInfo.scalaVersion}"
+         |smack.sbt-version = "${BuildInfo.sbtVersion}"
        """.stripMargin)
 
     val system: ActorSystem = ActorSystem("smack-client", config)

@@ -48,6 +48,7 @@ private[database] class MigrationControllerImpl(system: ActorSystem, migrationSe
       log.info(s"Migration for [${m.tag}] executed successfully.")
     }
 
+    session.close()
     migrationList.size
   }
 
@@ -85,6 +86,7 @@ private[database] class MigrationControllerImpl(system: ActorSystem, migrationSe
       stepValue > 0
     }
 
+    session.close()
     migration
   }
 
