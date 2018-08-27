@@ -63,7 +63,7 @@ lazy val analysis = module("analysis")
     scalaVersion := sparkScalaVersion,
   )
   .enablePlugins(AssemblyPlugin)
-  .settings(assemblySparkSettings: _*)
+  .settings(assemblyAnalyticsSettings: _*)
 
 lazy val client = module("client").dependsOn(commons)
   .settings(
@@ -96,7 +96,6 @@ lazy val migrate = module("migrate").dependsOn(commons)
   .enablePlugins(AssemblyPlugin)
   .settings(assemblySettings: _*)
 
-
 lazy val assemblySettings = Seq(
   assemblyMergeStrategy in assembly := {
     case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
@@ -108,7 +107,7 @@ lazy val assemblySettings = Seq(
 )
 
 // Taken from http://queirozf.com/entries/creating-scala-fat-jars-for-spark-on-sbt-with-sbt-assembly-plugin
-lazy val assemblySparkSettings = Seq(
+lazy val assemblyAnalyticsSettings = Seq(
   assemblyMergeStrategy in assembly := {
     case PathList("org","aopalliance", xs @ _*) => MergeStrategy.last
     case PathList("javax", "inject", xs @ _*) => MergeStrategy.last
@@ -125,6 +124,7 @@ lazy val assemblySparkSettings = Seq(
     case "META-INF/mimetypes.default" => MergeStrategy.last
     case "plugin.properties" => MergeStrategy.last
     case "log4j.properties" => MergeStrategy.last
+    case "git.properties" => MergeStrategy.last // org.apache.arrow
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)

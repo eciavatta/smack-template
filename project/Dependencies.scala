@@ -41,13 +41,13 @@ object Dependencies {
 
   // analysis dependenies
   val nanoHttpd       = "org.nanohttpd"              %  "nanohttpd"                 % nanoHttpdVersion
-  val quartz          = "org.quartz-scheduler"       %  "quartz"                    % quartzVersion            slf4jExclude()
-  val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion             nettyAllExclude()
-  val sparkCore       = "org.apache.spark"           %% "spark-core"                % sparkVersion             commonsBeanutilsExclude()
-  val sparkSql        = "org.apache.spark"           %% "spark-sql"                 % sparkVersion             jacksonCoreExclude()
+  val quartz          = "org.quartz-scheduler"       %  "quartz"                    % quartzVersion       slf4jExclude()
+  val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion        nettyAllExclude() jodaTimeExclude()
+  val sparkCore       = "org.apache.spark"           %% "spark-core"                % sparkVersion        commonsBeanutilsExclude()
+  val sparkSql        = "org.apache.spark"           %% "spark-sql"                 % sparkVersion        jacksonCoreExclude() slf4jExclude() findBugsExclude()
 
 
-  val rootDependencies= Seq(akkaActor, akkaCluster, akkaClusterSeed, akkaHttp, akkaMetrics, akkaRemote, akkaSprayJson, akkaStream, akkaStreamKafka,
+  val rootDependencies = Seq(akkaActor, akkaCluster, akkaClusterSeed, akkaHttp, akkaMetrics, akkaRemote, akkaSprayJson, akkaStream, akkaStreamKafka,
                              cassandraDriver, kamonAkkaRemote, kamonDatadog, kamonExecutors, scopt, uuidGenerator,
                              akkaHttpTestkit, akkaMulTestkit, akkaTestkit, embeddedKafka, scalacheck, scalatest,
                              guava, jacksonCore, kafkaClients)
@@ -68,10 +68,12 @@ object Dependencies {
       .exclude("com.typesafe.akka", "akka-remote_2.12")
       .exclude("com.typesafe.akka", "akka-stream_2.12")
     def akkaTestKitExclude(): ModuleID = module.exclude("com.typesafe.akka", "akka-testkit_2.12")
-    def configExclude(): ModuleID = module.exclude("com.typesafe", "config")
     def commonsBeanutilsExclude(): ModuleID = module.exclude("commons-beanutils", "commons-beanutils")
+    def configExclude(): ModuleID = module.exclude("com.typesafe", "config")
+    def findBugsExclude(): ModuleID = module.exclude("com.google.code.findbugs", "jsr305")
     def guavaExclude(): ModuleID = module.exclude("com.google.guava", "guava")
     def jacksonCoreExclude(): ModuleID = module.exclude("com.fasterxml.jackson.core", "jackson-core")
+    def jodaTimeExclude(): ModuleID = module.exclude("joda-time", "joda-time")
     def kafkaClientsExclude(): ModuleID = module.exclude("org.apache.kafka", "kafka-clients")
     def kamonCoreExclude(): ModuleID = module.exclude("io.kamon", "kamon-core_2.12")
     def nettyAllExclude(): ModuleID = module.exclude("io.netty", "netty-all")
