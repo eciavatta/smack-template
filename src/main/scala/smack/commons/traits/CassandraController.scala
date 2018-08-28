@@ -10,7 +10,6 @@ import smack.cassandra.CassandraDatabase
 import smack.cassandra.CassandraDatabase._
 import smack.commons.traits.Controller.{BadRequestException, InternalServerErrorException, ServiceUnavailableException}
 import smack.commons.utils.Helpers
-import smack.commons.traits.Controller.ServiceUnavailableException
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}

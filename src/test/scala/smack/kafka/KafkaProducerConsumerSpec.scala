@@ -28,12 +28,12 @@ class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
   val zookeeperPort = 2181
   val kafkaPort = 9092
 
+  implicit val kafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(kafkaPort, zookeeperPort)
   implicit val keySerializer: Serializer[String] = new StringSerializer
   implicit val valueSerializer: Serializer[ByteBuffer] = new ByteBufferSerializer
   implicit val keyDeserializer: Deserializer[String] = new StringDeserializer
   implicit val valueDeserializer: Deserializer[ByteBuffer] = new ByteBufferDeserializer
   implicit val serialization: Serialization = SerializationExtension(system)
-  implicit val kafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(kafkaPort, zookeeperPort)
 
   override def afterEach(): Unit = {
     Try {
@@ -130,7 +130,6 @@ class KafkaProducerConsumerSpec extends TestKitBase with EmbeddedKafka
       publishToKafka(topic, skipMessage.getClass.getName, skipMessageSerialized.get)
       messagesConsumerProbe.expectMsg(skipMessage)
       messagesConsumerProbe.reply(Failure(TestException("Fail to process message")))
-
     }
 
     "restart if an exception occurs" in {

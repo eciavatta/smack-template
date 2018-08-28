@@ -9,7 +9,6 @@ val dockerUser = "eciavatta"
 val akkaScalaVersion = "2.12.6"
 val sparkScalaVersion = "2.11.12"
 
-// add scalastyle to compile task
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
 
 lazy val root = Project(
@@ -45,13 +44,13 @@ lazy val commonSettings = Seq(
   (compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value,
   compileScalastyle := scalastyle.in(Compile).toTask("").value,
   conflictManager in ThisBuild := ConflictManager.all,
-  parallelExecution in Test := false,
   scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
   updateOptions := updateOptions.value.withCachedResolution(true),
 
-  test in assembly := {},
   coverageEnabled := false,
   fork in Test := true,
+  parallelExecution in Test := false,
+  test in assembly := {},
 
   evictionWarningOptions in update := EvictionWarningOptions.default.withWarnTransitiveEvictions(false)
     .withWarnDirectEvictions(false).withWarnScalaVersionEviction(false)
@@ -99,7 +98,6 @@ lazy val migrate = module("migrate").dependsOn(commons)
   .settings(assemblySettings: _*)
 
 lazy val assemblySettings = Seq(
-  assemblyOption in assembly := (assemblyOption in assembly).value.copy(prependShellScript = Some(defaultUniversalScript(shebang = false))),
   assemblyMergeStrategy in assembly := {
     case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
     case PathList("META-INF", "aop.xml") => aopMerge

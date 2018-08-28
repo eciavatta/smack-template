@@ -73,7 +73,7 @@
  <check level="warning" class="org.scalastyle.scalariform.NoFinalizeChecker" enabled="true"></check>
  <check level="warning" class="org.scalastyle.scalariform.CovariantEqualsChecker" enabled="true"></check>
  <check level="warning" class="org.scalastyle.scalariform.StructuralTypeChecker" enabled="true"></check>
- <check level="warning" class="org.scalastyle.file.RegexChecker" enabled="false">
+ <check level="warning" class="org.scalastyle.file.RegexChecker" enabled="true">
   <parameters>
    <parameter name="regex"><![CDATA[println]]></parameter>
   </parameters>
@@ -96,7 +96,7 @@
    <parameter name="doubleLineAllowed"><![CDATA[false]]></parameter>
   </parameters>
  </check>
- <check level="warning" class="org.scalastyle.scalariform.MethodLengthChecker" enabled="false">
+ <check level="warning" class="org.scalastyle.scalariform.MethodLengthChecker" enabled="true">
   <parameters>
    <parameter name="maxLength"><![CDATA[100]]></parameter>
   </parameters>

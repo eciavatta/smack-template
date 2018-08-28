@@ -6,9 +6,9 @@ import com.fasterxml.uuid.Generators
 import com.typesafe.config.Config
 import smack.backend.controllers.UserController.EmailAlreadyExistsException
 import smack.cassandra.CassandraDatabase.CassandraStatement
+import smack.commons.traits.CassandraController
 import smack.commons.traits.Controller.NotFoundException
 import smack.commons.utils.{Converters, Helpers}
-import smack.commons.traits.CassandraController
 import smack.models.messages._
 import smack.models.structures.{Date, ResponseStatus, User}
 
@@ -53,7 +53,7 @@ class UserController extends Actor with CassandraController with ActorLogging {
     .map { uuid =>
       CassandraStatement(new SimpleStatement("SELECT id, email, full_name, toTimestamp(id) as registered_date FROM users_by_id WHERE id = ?;", uuid))
     }
-    .map(executeQuery).flatten
+    .flatMap(executeQuery)
     .map { resultSet =>
       resultSet.all().asScala.headOption.fold(throw NotFoundException) { row =>
         User(id = row.getUUID("id").toString,
@@ -67,7 +67,7 @@ class UserController extends Actor with CassandraController with ActorLogging {
   private def createUser(email: String, password: String, fullName: String): Future[User] = executeQuery(
     CassandraStatement(new SimpleStatement("SELECT COUNT(*) FROM users_by_credentials WHERE email = ?;", email))
   ) .map(resultSet => if (resultSet.one().getLong(0) > 0) throw EmailAlreadyExistsException)
-    .map { _ =>
+    .flatMap { _ =>
       val uuid = Generators.timeBasedGenerator().generate()
       val queries = Seq(
         new SimpleStatement("INSERT INTO users_by_id (id, email, full_name) VALUES (?, ?, ?);", uuid, email, fullName),
@@ -75,14 +75,14 @@ class UserController extends Actor with CassandraController with ActorLogging {
       )
       executeQuery(CassandraStatement(new BatchStatement().addAll(queries.asJava)))
         .map(_ => User(uuid.toString, email, fullName, Some(Date(Converters.getTimeFromUUID(uuid)))))
-    }.flatten
+    }
 
   private def updateUser(id: String, fullName: String): Future[User] = findUser(id)
-    .map { user =>
+    .flatMap { user =>
       executeQuery(
         CassandraStatement(new SimpleStatement("UPDATE users_by_id SET full_name = ? WHERE id = ?;", fullName, convertToUUID(id).get))
       ).map (_ => user.copy(fullName = fullName))
-    }.flatten
+    }
 
 }
 

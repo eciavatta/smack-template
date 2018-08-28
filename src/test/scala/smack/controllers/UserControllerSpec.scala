@@ -11,8 +11,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import smack.backend.controllers.UserController
 import smack.commons.mashallers.Marshalling
-import smack.commons.utils.Helpers
-import smack.commons.utils.DatabaseUtils
+import smack.commons.utils.{DatabaseUtils, Helpers}
 import smack.database.MigrationController
 import smack.database.migrations.{CreateUsersByCredentialsTable, CreateUsersByIdTable}
 import smack.frontend.routes.UserRoute

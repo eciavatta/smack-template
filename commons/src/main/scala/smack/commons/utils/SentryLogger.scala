@@ -54,4 +54,5 @@ class SentryLogger extends Actor {
       .withTag("server_instance", serverInstance)
       .build())
   }
+
 }

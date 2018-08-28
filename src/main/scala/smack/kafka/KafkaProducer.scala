@@ -13,9 +13,8 @@ import akka.{Done, NotUsed}
 import org.apache.kafka.clients.producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteBufferSerializer, StringSerializer}
-import smack.commons.traits.{ContextDispatcher, ImplicitSerialization}
-import smack.commons.utils.Helpers
 import smack.commons.traits.{ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
+import smack.commons.utils.Helpers
 import smack.kafka.KafkaProducer._
 import smack.kafka.ProtobufSerialization.serializeMessage
 import smack.models.messages.GenerateException

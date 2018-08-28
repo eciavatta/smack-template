@@ -30,7 +30,6 @@ services:
     ports:
       - "9092:9092"
 
-
   zookeeper:
     image: zookeeper:3.5
     healthcheck:

@@ -10,9 +10,8 @@ import com.google.common.cache.CacheBuilder
 import com.typesafe.config.Config
 import smack.cassandra.CassandraDatabase.CassandraStatement
 import smack.commons.traits.Controller.NotFoundException
-import smack.commons.traits.KafkaController
-import smack.commons.utils.Helpers
 import smack.commons.traits.{CassandraController, KafkaController}
+import smack.commons.utils.Helpers
 import smack.models.messages._
 
 import scala.collection.JavaConverters._
@@ -43,14 +42,13 @@ class LogController extends Actor with KafkaController with CassandraController 
 
   private def traceLog(traceLogRequest: TraceLogRequest): Future[Done] = Future
     .fromTry(convertToUUID(traceLogRequest.id))
-    .map{ trackingId =>
+    .flatMap { trackingId =>
       Option(trackingIdCache.getIfPresent(trackingId)).fold(
         findSiteId(trackingId).map(siteId => {trackingIdCache.put(trackingId, siteId); siteId}))(
         Future(_))
-    }.flatten
-    .map { siteId =>
+    }.flatMap { siteId =>
       sendToKafka(traceLogRequest.copy(id = siteId.toString))
-    }.flatten
+    }
 
   private def findSiteId(trackingId: UUID): Future[UUID] = executeQuery(
     CassandraStatement(new SimpleStatement("SELECT site_id FROM sites_by_tracking_id WHERE tracking_id = ?", trackingId)))

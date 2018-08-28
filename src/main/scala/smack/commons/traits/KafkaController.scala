@@ -4,7 +4,7 @@ import akka.Done
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef}
 import akka.pattern.{AskTimeoutException, ask}
 import akka.routing.RoundRobinGroup
-import Controller.{InternalServerErrorException, ServiceUnavailableException}
+import smack.commons.traits.Controller.{InternalServerErrorException, ServiceUnavailableException}
 import smack.commons.utils.Helpers
 import smack.kafka.KafkaProducer
 

@@ -13,22 +13,21 @@ import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Sink, Source}
 import akka.stream.{AbruptStageTerminationException, ClosedShape}
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteBufferDeserializer, StringDeserializer}
-import smack.commons.traits.{AskTimeout, ContextDispatcher, ImplicitSerialization}
-import smack.commons.utils.Helpers
 import smack.commons.traits.{AskTimeout, ContextDispatcher, ImplicitMaterializer, ImplicitSerialization}
+import smack.commons.utils.Helpers
 import smack.kafka.KafkaConsumer.TestException
 import smack.models.messages.GenerateException
 
 import scala.util.{Failure, Success, Try}
 
-class KafkaConsumer(topic: String, group: String, consumingActor: ActorRef, kafkaPort: Option[Int] = None)
+class KafkaConsumer(topic: String, group: String, consumingActor: ActorRef)
   extends Actor with ImplicitMaterializer with ImplicitSerialization with AskTimeout with ContextDispatcher {
 
   private val log = Logging(context.system, context.self)
 
   private val config = Helpers.actorConfig.getConfig("smack.kafka.consumer")
   private val consumerSettings = ConsumerSettings(Helpers.actorConfig.getConfig("akka.kafka.consumer"), new StringDeserializer, new ByteBufferDeserializer)
-                                 .withBootstrapServers(kafkaPort.fold(config.getString("bootstrap-server"))(port => s"127.0.0.1:$port"))
+                                 .withBootstrapServers(config.getString("bootstrap-server"))
                                  .withGroupId(group)
                                  .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
   private var consumerControl: Consumer.Control = _

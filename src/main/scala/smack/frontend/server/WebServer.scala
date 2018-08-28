@@ -36,9 +36,10 @@ class WebServer(system: ActorSystem, backendRouter: ActorRef) {
       case mvr@ModelValidationRejection(_) => buildBadRequestResponse(mvr.invalidFields.toJson.toString)
       case vr: ValidationRejection => buildBadRequestResponse(vr.message)
       case mrcr: MalformedRequestContentRejection => buildBadRequestResponse(mrcr.message)
-    }.handleNotFound {
-    routeWithDirectives(complete(StatusCodes.NotFound))
-  }.result()
+    }
+    .handleNotFound {
+      routeWithDirectives(complete(StatusCodes.NotFound))
+    }.result()
 
   def start(): Unit = {
     if (binding != Future.never) throw new IllegalStateException("Webserver already started")

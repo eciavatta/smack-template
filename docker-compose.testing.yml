@@ -20,7 +20,7 @@ services:
 
   backend:
     image: eciavatta/smack-template:latest
-    command: -d false -l INFO -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 backend
+    command: -l INFO -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 backend
     depends_on:
       cassandra:
         condition: service_healthy
@@ -33,7 +33,7 @@ services:
 
   service:
     image: eciavatta/smack-template:latest
-    command: -d false -l INFO -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 service
+    command: -l INFO -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 service
     depends_on:
       cassandra:
         condition: service_healthy
@@ -46,7 +46,7 @@ services:
 
   migrate:
     image: eciavatta/smack-template:latest
-    command: migrate --create-keyspace -d false -l INFO -c cassandra:9042
+    command: migrate --create-keyspace -l INFO -c cassandra:9042
     depends_on:
       cassandra:
         condition: service_healthy

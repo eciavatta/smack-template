@@ -2,8 +2,8 @@ package smack.multinode
 
 import akka.remote.testkit.MultiNodeSpec
 import smack.backend.BackendSupervisor
-import smack.commons.utils.SystemIntegrationConfig._
 import smack.commons.traits.STMultiNodeSpec
+import smack.commons.utils.SystemIntegrationConfig._
 
 class SystemIntegrationSpecMultiJvmBackend extends MultiNodeSpec(SystemIntegrationMultiNodeConfig, createActorSystem("backend")) with STMultiNodeSpec {
 

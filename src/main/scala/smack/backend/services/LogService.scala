@@ -32,8 +32,7 @@ class LogService extends Actor with CassandraController with ActorLogging {
       CassandraStatement(new SimpleStatement("INSERT INTO logs (site_id, log_id, url, ip_address, user_agent) VALUES (?, NOW(), ?, ?, ?);",
         siteId, traceLogRequest.url, traceLogRequest.ipAddress, traceLogRequest.userAgent))
     }
-    .map(executeQuery)
-    .flatten
+    .flatMap(executeQuery)
     .map(_ => Done)
 
 }

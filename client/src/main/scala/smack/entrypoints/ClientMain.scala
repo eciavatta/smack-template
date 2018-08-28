@@ -77,5 +77,5 @@ object ClientMain extends EntryPoint[ClientMain] {
 }
 
 case class ClientMain(count: Long = 0, debug: Option[Boolean] = None, host: String = "127.0.0.1", logLevel: String = "INFO", parallelism: Int = 2,
-                              port: Int = ClientMain.defaultClientPort, requestsPerSecond: Int = ClientMain.defaultClientRequestsPerSecond,
-                              sentryDns: Option[String] = None)
+                      port: Int = ClientMain.defaultClientPort, requestsPerSecond: Int = ClientMain.defaultClientRequestsPerSecond,
+                      sentryDns: Option[String] = None)

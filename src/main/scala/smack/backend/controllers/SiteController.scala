@@ -4,9 +4,9 @@ import akka.actor.{Actor, ActorLogging, Props}
 import com.datastax.driver.core.{BatchStatement, SimpleStatement}
 import com.fasterxml.uuid.Generators
 import smack.cassandra.CassandraDatabase.CassandraStatement
+import smack.commons.traits.CassandraController
 import smack.commons.traits.Controller.NotFoundException
 import smack.commons.utils.Converters
-import smack.commons.traits.CassandraController
 import smack.models.messages._
 import smack.models.structures.{Date, Site}
 
@@ -54,7 +54,7 @@ class SiteController extends Actor with CassandraController with ActorLogging {
     .map { uuid =>
       CassandraStatement(new SimpleStatement("SELECT site_id, toTimestamp(site_id) as created_date FROM sites_by_users WHERE user_id = ?;", uuid))
     }
-    .map(executeQuery).flatten
+    .flatMap(executeQuery)
     .map { resultSet =>
       resultSet.all().asScala.map { row =>
         Site(id = row.getUUID("site_id").toString,
@@ -68,7 +68,7 @@ class SiteController extends Actor with CassandraController with ActorLogging {
     .map { uuid =>
       CassandraStatement(new SimpleStatement("SELECT id, domain, tracking_id, toTimestamp(id) as created_date FROM sites_by_id WHERE id = ?;", uuid))
     }
-    .map(executeQuery).flatten
+    .flatMap(executeQuery)
     .map { resultSet =>
       resultSet.all().asScala.headOption.fold(throw NotFoundException) { row =>
         Site(id = row.getUUID("id").toString,
@@ -81,7 +81,7 @@ class SiteController extends Actor with CassandraController with ActorLogging {
 
   private def createSite(userId: String, domain: String): Future[Site] = Future
     .fromTry(convertToUUID(userId))
-    .map { userUUID =>
+    .flatMap { userUUID =>
       val id = Generators.timeBasedGenerator().generate()
       val trackingId = Generators.randomBasedGenerator().generate()
       val queries = Seq(
@@ -91,14 +91,14 @@ class SiteController extends Actor with CassandraController with ActorLogging {
       )
       executeQuery(CassandraStatement(new BatchStatement().addAll(queries.asJava)))
         .map(_ => Site(id.toString, domain, trackingId.toString, Some(Date(Converters.getTimeFromUUID(id)))))
-    }.flatten
+    }
 
   private def updateSite(id: String, domain: String): Future[Site] = findSite(id)
-    .map { site =>
+    .flatMap { site =>
       executeQuery(
         CassandraStatement(new SimpleStatement("UPDATE sites_by_id SET domain = ? WHERE id = ?;", domain, convertToUUID(id).get))
       ).map (_ => site.copy(domain = domain))
-    }.flatten
+    }
 
   private def deleteSite(id: String, userId: String): Future[Unit] = findSite(id)
     .map { site =>

@@ -105,6 +105,7 @@ class CassandraDatabaseSpec extends TestKitBase with WordSpecLike with BeforeAnd
       val CassandraResult(resultSet: Try[ResultSet]) = Await.result(future, 3.seconds)
       resultSet.get.all().asScala.map(_.getInt("id")) should contain theSameElementsAs (0 until 100).toList
     }
+
   }
 
 }

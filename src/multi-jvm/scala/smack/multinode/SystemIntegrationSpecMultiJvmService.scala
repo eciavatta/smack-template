@@ -2,8 +2,8 @@ package smack.multinode
 
 import akka.remote.testkit.MultiNodeSpec
 import smack.backend.ServiceSupervisor
-import smack.commons.utils.SystemIntegrationConfig._
 import smack.commons.traits.STMultiNodeSpec
+import smack.commons.utils.SystemIntegrationConfig._
 
 class SystemIntegrationSpecMultiJvmService extends MultiNodeSpec(SystemIntegrationMultiNodeConfig, createActorSystem("service")) with STMultiNodeSpec {
 
