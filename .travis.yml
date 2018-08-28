@@ -10,6 +10,7 @@ services:
 script:
   - docker-compose up -d
   - sbt coverage test multi-jvm:test assembly
+  - docker-compose down
 
 after_failure:
   - docker-compose logs

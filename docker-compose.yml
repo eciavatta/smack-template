@@ -2,29 +2,41 @@
 # To start all docker containers required to execute the tests locally run:
 # docker-compose up
 
-version: '2'
+version: '2.1'
 services:
   cassandra:
     image: cassandra:3
-    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
     ports:
       - "9042:9042"
 
   kafka:
     image: wurstmeister/kafka:2.11-2.0.0
-    restart: on-failure
-    ports:
-      - "9092:9092"
     depends_on:
-      - "zookeeper"
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_ADVERTISED_HOST_NAME: "127.0.0.1"
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181/kafka"
-    links:
-      - "zookeeper"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --zookeeper $$KAFKA_ZOOKEEPER_CONNECT --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    ports:
+      - "9092:9092"
+
 
   zookeeper:
     image: zookeeper:3.5
-    restart: on-failure
+    healthcheck:
+      test: echo stat | nc localhost 2181
+      interval: 15s
+      timeout: 10s
+      retries: 3
     ports:
       - "2181:2181"

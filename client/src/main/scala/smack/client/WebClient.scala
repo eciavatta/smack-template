@@ -4,8 +4,8 @@ import java.util.Date
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.routing.BroadcastPool
-import smack.commons.utils.Helpers
 import smack.commons.traits.ContextDispatcher
+import smack.commons.utils.Helpers
 
 import scala.concurrent.duration._
 

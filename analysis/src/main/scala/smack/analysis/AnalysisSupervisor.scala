@@ -7,7 +7,7 @@ import org.quartz.impl.StdSchedulerFactory
 import smack.analysis.jobs.StatsCollectorJob
 import smack.commons.traits.SparkJob
 
-class AnalysisSupervisor(sparkContext: SparkContext, startFrom: Long) extends Logging {
+class AnalysisSupervisor(sparkContext: SparkContext, keyspace: String) extends Logging {
 
   val fiveMinutesInMillis = 300000L
 
@@ -15,7 +15,7 @@ class AnalysisSupervisor(sparkContext: SparkContext, startFrom: Long) extends Lo
   scheduleSparkJob(classOf[StatsCollectorJob], "0 0/5 * * * ?", jobDataMap => { // every 5 minutes
     jobDataMap.put("StatType", "5_minutes")
     jobDataMap.put("StatRange", fiveMinutesInMillis)
-    jobDataMap.put("Keyspace", "smackdev")
+    jobDataMap.put("Keyspace", keyspace)
     jobDataMap
   })
 

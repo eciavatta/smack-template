@@ -1,35 +1,52 @@
 # For detailed information about docker-compose visit https://docs.docker.com/compose/
-# To start all docker containers required to execute the tests locally run:
-# docker-compose up
+# To start a simple configuration of the smack stack in the local machine run:
+# docker-compose -f docker-compose.yml -f docker-compose.testing.yml up -d
 
-version: '2'
+version: '2.1'
 services:
+  kafka:
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+
   frontend:
     image: eciavatta/smack-template:latest
-    command: -d true -l DEBUG -a zookeeper:2181/akka frontend
-    ports:
-      - "8080:8080"
+    command: -d false -l INFO -a zookeeper:2181/akka frontend
     depends_on:
       - "migrate"
+    environment:
+      HOST: frontend
+    ports:
+      - "8080:8080"
 
   backend:
     image: eciavatta/smack-template:latest
-    command: -d true -l DEBUG -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 backend
+    command: -d false -l INFO -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 backend
     depends_on:
-      - "migrate"
-      - "kafka"
-      - "cassandra"
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      migrate:
+        condition: service_started
+    environment:
+      HOST: backend
 
   service:
     image: eciavatta/smack-template:latest
-    command: -d true -l DEBUG -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 service
+    command: -d false -l INFO -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 service
     depends_on:
-      - "migrate"
-      - "kafka"
-      - "cassandra"
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      migrate:
+        condition: service_started
+    environment:
+      HOST: service
 
   migrate:
     image: eciavatta/smack-template:latest
-    command: migrate --create-keyspace -d false -l DEBUG -c cassandra:9042
+    command: migrate --create-keyspace -d false -l INFO -c cassandra:9042
     depends_on:
-      - "cassandra"
+      cassandra:
+        condition: service_healthy

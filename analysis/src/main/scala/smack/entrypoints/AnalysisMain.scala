@@ -5,7 +5,7 @@ import java.io.File
 import io.sentry.Sentry
 import org.apache.spark.{SparkConf, SparkContext}
 import scopt.OptionParser
-import smack.analysis.AnalysisSupervisor
+import smack.analysis.{AnalysisSupervisor, BuildInfo}
 import smack.commons.utils.JarProvider
 
 import scala.util.matching.Regex
@@ -34,7 +34,7 @@ object AnalysisMain {
     if (params.jarProviderBinding.isDefined) {
       val jarProviderRegex = addressPattern.findFirstMatchIn(params.jarProviderBinding.get).get
       new JarProvider(params.jarFile, jarProviderRegex.group(2).toInt)
-      conf.set("spark.jars", s"http://${params.jarProviderBinding.get}/")
+      conf.set("spark.jars", s"http://${params.jarProviderBinding.get}/${BuildInfo.name}-${BuildInfo.version}.jar")
     }
 
     if (params.jarExternalPath.isDefined) {
@@ -48,12 +48,12 @@ object AnalysisMain {
     val sparkContext = new SparkContext(conf)
     sparkContext.setLogLevel(params.logLevel)
 
-    val analysisSupervisor = new AnalysisSupervisor(sparkContext, params.startFrom)
+    val analysisSupervisor = new AnalysisSupervisor(sparkContext, params.keyspace)
     analysisSupervisor.startScheduler()
   }
 
-  private def argumentParser: OptionParser[AnalysisParams] = new scopt.OptionParser[AnalysisParams]("smack-analysis") {
-    // head(BuildInfo.name, BuildInfo.version)
+  private def argumentParser: OptionParser[AnalysisParams] = new scopt.OptionParser[AnalysisParams](BuildInfo.name) {
+    head(BuildInfo.name, BuildInfo.version)
 
     opt[String]('m', "master").required()
       .action((master, config) => config.copy(master = master))
@@ -94,10 +94,6 @@ object AnalysisMain {
       .action((jarExternalPath, config) => config.copy(jarExternalPath = Some(jarExternalPath)))
       .text("...")
 
-    opt[Long]("start-from").optional().valueName("<timestamp>")
-      .action((startFrom, config) => config.copy(startFrom = startFrom))
-      .text("...")
-
     note("...")
   }
 
@@ -108,7 +104,7 @@ object AnalysisMain {
 
   case class AnalysisParams(cassandra: String = "127.0.0.1:9042", keyspace: String = "smackdev", logLevel: String = "INFO", master: String = "",
                             sentryDns: Option[String] = None, sparkHome: String = "/opt/spark", jarProviderBinding: Option[String] = None,
-                            jarFile: File = new File("/app/"), jarExternalPath: Option[String] = None, startFrom: Long = System.currentTimeMillis())
+                            jarFile: File = new File("/app/"), jarExternalPath: Option[String] = None)
 
 }
 

@@ -2,14 +2,11 @@ package smack.commons.traits
 
 import org.apache.spark.SparkContext
 import org.apache.spark.internal.Logging
-import org.quartz.{DisallowConcurrentExecution, Job, JobExecutionContext, PersistJobDataAfterExecution}
+import org.quartz.{Job, JobExecutionContext}
 
-@DisallowConcurrentExecution
-@PersistJobDataAfterExecution
 trait SparkJob extends Job with Logging {
 
   var sparkContext: SparkContext = _
-
   var currentContext: JobExecutionContext = _
 
   override def execute(context: JobExecutionContext): Unit = {

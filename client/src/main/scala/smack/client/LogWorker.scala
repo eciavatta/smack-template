@@ -12,7 +12,6 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{AbruptStageTerminationException, OverflowStrategy, QueueOfferResult}
 import smack.client.WebClient.{BenchTimes, GetStatistics, Statistics, WorkerFailure}
 import smack.commons.mashallers.Marshalling
-import smack.commons.traits.ContextDispatcher
 import smack.commons.traits.{ContextDispatcher, ImplicitMaterializer}
 import smack.models.Events.{LogEvent, SiteCreating, UserCreating}
 import smack.models.structures.{Site, User}
