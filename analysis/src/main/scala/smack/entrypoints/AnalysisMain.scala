@@ -23,13 +23,11 @@ object AnalysisMain {
 
     val conf = new SparkConf(true)
       .setAppName("smack-analysis")
-      .setMaster(params.master)
       .set("spark.jars.packages", "datastax:spark-cassandra-connector:2.3.0-s_2.11")
       .set("spark.cassandra.connection.host", cassandraRegex.group(1))
       .set("spark.cassandra.connection.port", cassandraRegex.group(2))
       .set("spark.driver.extraJavaOptions", params.sentryDns.fold(log4jParam)(_ => log4jSentryParam))
       .set("spark.executor.extraJavaOptions", params.sentryDns.fold(log4jParam)(_ => log4jSentryParam))
-      .setSparkHome(params.sparkHome)
 
     if (params.jarProviderBinding.isDefined) {
       val jarProviderRegex = addressPattern.findFirstMatchIn(params.jarProviderBinding.get).get
@@ -54,10 +52,6 @@ object AnalysisMain {
 
   private def argumentParser: OptionParser[AnalysisParams] = new scopt.OptionParser[AnalysisParams](BuildInfo.name) {
     head(BuildInfo.name, BuildInfo.version)
-
-    opt[String]('m', "master").required()
-      .action((master, config) => config.copy(master = master))
-      .text("...")
 
     opt[String]('c', "cassandra-bootstrap").optional()
       .action((cassandra, config) => config.copy(cassandra = cassandra))
@@ -102,9 +96,9 @@ object AnalysisMain {
     case None => sys.exit(1)
   }
 
-  case class AnalysisParams(cassandra: String = "127.0.0.1:9042", keyspace: String = "smackdev", logLevel: String = "INFO", master: String = "",
-                            sentryDns: Option[String] = None, sparkHome: String = "/opt/spark", jarProviderBinding: Option[String] = None,
-                            jarFile: File = new File("/app/"), jarExternalPath: Option[String] = None)
+  case class AnalysisParams(cassandra: String = "127.0.0.1:9042", keyspace: String = "smackdev", logLevel: String = "INFO", sentryDns: Option[String] = None,
+                            sparkHome: String = "/opt/spark", jarProviderBinding: Option[String] = None,
+                            jarFile: File = new File(s"/app/${BuildInfo.name}-${BuildInfo.version}.jar"), jarExternalPath: Option[String] = None)
 
 }
 

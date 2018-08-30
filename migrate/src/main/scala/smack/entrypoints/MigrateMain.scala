@@ -14,8 +14,6 @@ object MigrateMain extends EntryPoint[MigrateMain] {
   def main(args: Array[String]): Unit = {
     val params = checkAndGetConfig(args, MigrateMain())
 
-    val cassandraRegex = addressPattern.findFirstMatchIn(params.cassandra).get
-
     val env = params.environment match {
       case "development" => "dev"
       case "production" => "prod"
@@ -27,8 +25,7 @@ object MigrateMain extends EntryPoint[MigrateMain] {
          |${params.debug.fold("")(debug => s"smack.debug = ${if (debug) "on" else "off"}")}
          |akka.loggers = ["$defaultLogger"${if (params.sentryDns.isDefined) ", \"" + sentryLogger + "\"" else ""}]
          |akka.loglevel = "${params.logLevel.toUpperCase}"
-         |smack.cassandra.contact-point.host = "${cassandraRegex.group(1)}"
-         |smack.cassandra.contact-point.port = ${cassandraRegex.group(2)}
+         |smack.cassandra.contact-points = [${params.cassandraContactPoints.map(cassandra => s""""$cassandra"""").mkString(",")}]
          |smack.sentry.dns = "${params.sentryDns.fold("")(identity)}"
          |smack.name = "${BuildInfo.name}-$env"
          |smack.version = "${BuildInfo.version}"
@@ -69,9 +66,9 @@ object MigrateMain extends EntryPoint[MigrateMain] {
   override protected def argumentParser: OptionParser[MigrateMain] = new scopt.OptionParser[MigrateMain](BuildInfo.name) {
     head(BuildInfo.name, BuildInfo.version)
 
-    opt[String]('c', "cassandra-bootstrap").optional()
-      .action((cassandra, config) => config.copy(cassandra = cassandra))
-      .validate(cassandra => addressPattern.findFirstIn(cassandra).fold(failure("invalid cassandra address"))(_ => success))
+    opt[String]('c', "cassandra-contact-points").optional().unbounded()
+      .action((cassandra, config) => config.copy(cassandraContactPoints = config.cassandraContactPoints :+ cassandra))
+      .validate(cassandra => addressPattern.findFirstIn(cassandra).fold(failure("invalid cassandra-contact-points address"))(_ => success))
       .text("...")
 
     opt[Unit]("create-keyspace").optional()
@@ -119,6 +116,6 @@ object MigrateMain extends EntryPoint[MigrateMain] {
 
 }
 
-case class MigrateMain(cassandra: String = "127.0.0.1:9042", createKeyspace: Boolean = false, debug: Option[Boolean] = None,
+case class MigrateMain(cassandraContactPoints: Seq[String] = Seq("127.0.0.1:9042"), createKeyspace: Boolean = false, debug: Option[Boolean] = None,
                        environment: String = "development", force: Boolean = false, isReset: Boolean = false, isRollback: Boolean = false,
                        logLevel: String = "INFO", rollbackSteps: Int = 1, sentryDns: Option[String] = None)

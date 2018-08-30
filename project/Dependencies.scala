@@ -7,7 +7,6 @@ object Dependencies {
   // project direct dependencies
   val akkaActor       = "com.typesafe.akka"          %% "akka-actor"                % akkaVersion
   val akkaCluster     = "com.typesafe.akka"          %% "akka-cluster"              % akkaVersion
-  val akkaClusterSeed = "com.sclasen"                %% "akka-zk-cluster-seed"      % akkaZkClusterSeedVersion akkaClusterSeedExclusions()
   val akkaHttp        = "com.typesafe.akka"          %% "akka-http"                 % akkaHttpVersion
   val akkaMetrics     = "com.typesafe.akka"          %% "akka-cluster-metrics"      % akkaVersion
   val akkaRemote      = "com.typesafe.akka"          %% "akka-remote"               % akkaVersion
@@ -27,7 +26,7 @@ object Dependencies {
   val akkaHttpTestkit = "com.typesafe.akka"          %% "akka-http-testkit"         % akkaHttpVersion   % Test akkaExclude() akkaTestKitExclude()
   val akkaMulTestkit  = "com.typesafe.akka"          %% "akka-multi-node-testkit"   % akkaVersion       % Test
   val akkaTestkit     = "com.typesafe.akka"          %% "akka-testkit"              % akkaVersion       % Test
-  val embeddedKafka   = "net.manub"                  %% "scalatest-embedded-kafka"  % embKafkaVersion   % Test slf4jExclude() snappyExclude() zookeeperExclude()
+  val embeddedKafka   = "net.manub"                  %% "scalatest-embedded-kafka"  % embKafkaVersion   % Test slf4jExclude() snappyExclude()
   val scalacheck      = "org.scalacheck"             %% "scalacheck"                % scalaCheckVersion % Test
   val scalatest       = "org.scalatest"              %% "scalatest"                 % scalaTestVersion  % Test
 
@@ -42,14 +41,13 @@ object Dependencies {
 
   // analysis dependencies
   val nanoHttpd       = "org.nanohttpd"              %  "nanohttpd"                 % nanoHttpdVersion
-  val quartz          = "org.quartz-scheduler"       %  "quartz"                    % quartzVersion       slf4jExclude()
-  val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion        nettyAllExclude() jodaTimeExclude()
-  val sparkCore       = "org.apache.spark"           %% "spark-core"                % sparkVersion        commonsBeanutilsExclude()
-  val sparkSql        = "org.apache.spark"           %% "spark-sql"                 % sparkVersion        jacksonCoreExclude() slf4jExclude() findBugsExclude()
+  val quartz          = "org.quartz-scheduler"       %  "quartz"                    % quartzVersion
+  val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion      % Provided
+  val sparkCore       = "org.apache.spark"           %% "spark-core"                % sparkVersion      % Provided
+  val sparkSql        = "org.apache.spark"           %% "spark-sql"                 % sparkVersion      % Provided
 
-
-  val rootDependencies = Seq(akkaActor, akkaCluster, akkaClusterSeed, akkaHttp, akkaMetrics, akkaRemote, akkaSprayJson, akkaStream, akkaStreamKafka,
-                             cassandraDriver, kamonAkkaRemote, kamonDatadog, kamonExecutors, scopt, uuidGenerator,
+  val rootDependencies = Seq(akkaActor, akkaCluster, akkaHttp, akkaMetrics, akkaRemote, akkaSprayJson, akkaStream, akkaStreamKafka, cassandraDriver,
+                             kamonAkkaRemote, kamonDatadog, kamonExecutors, scopt, uuidGenerator,
                              akkaHttpTestkit, akkaMulTestkit, akkaTestkit, embeddedKafka, scalacheck, scalatest,
                              guava, jacksonCore, kafkaClients)
 
@@ -82,8 +80,6 @@ object Dependencies {
     def slf4jExclude(): ModuleID = module.exclude("org.slf4j", "slf4j-api")
     def snappyExclude(): ModuleID = module.exclude("org.xerial.snappy", "snappy-java")
     def sourceCodeExclude(): ModuleID = module.exclude("com.lihaoyi", "sourcecode_2.12")
-    def zookeeperExclude(): ModuleID = module.exclude("org.apache.zookeeper", "zookeeper")
-    def akkaClusterSeedExclusions(): ModuleID = akkaExclude() slf4jExclude() guavaExclude() nettyExclude()
 
   }
 

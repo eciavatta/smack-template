@@ -4,7 +4,6 @@ object Versions {
   val akkaHttpVersion          = "10.1.3"
   val akkaStreamKafkaVersion   = "0.22"
   val akkaVersion              = "2.5.14"
-  val akkaZkClusterSeedVersion = "0.1.10"
   val cassandraDriverVersion   = "3.5.1"
   val embKafkaVersion          = "1.1.1"
   val guavaVersion             = "21.0"

@@ -29,6 +29,7 @@ object ClientMain extends EntryPoint[ClientMain] {
          |smack.version = "${BuildInfo.version}"
          |smack.scala-version = "${BuildInfo.scalaVersion}"
          |smack.sbt-version = "${BuildInfo.sbtVersion}"
+         |smack.https = ${if (params.isHttps) "on" else "off"}
        """.stripMargin)
 
     val system: ActorSystem = ActorSystem("smack-client", config)
@@ -48,6 +49,10 @@ object ClientMain extends EntryPoint[ClientMain] {
 
     opt[String]('h', "host").optional()
       .action((host, config) => config.copy(host = host))
+      .text("...")
+
+    opt[Unit]("https").optional()
+      .action((_, config) => config.copy(isHttps = true))
       .text("...")
 
     opt[String]('l',"loglevel").optional()
@@ -76,6 +81,6 @@ object ClientMain extends EntryPoint[ClientMain] {
 
 }
 
-case class ClientMain(count: Long = 0, debug: Option[Boolean] = None, host: String = "127.0.0.1", logLevel: String = "INFO", parallelism: Int = 2,
-                      port: Int = ClientMain.defaultClientPort, requestsPerSecond: Int = ClientMain.defaultClientRequestsPerSecond,
-                      sentryDns: Option[String] = None)
+case class ClientMain(count: Long = 0, debug: Option[Boolean] = None, host: String = "127.0.0.1", isHttps: Boolean = false,
+                      logLevel: String = "INFO", parallelism: Int = 2, port: Int = ClientMain.defaultClientPort,
+                      requestsPerSecond: Int = ClientMain.defaultClientRequestsPerSecond, sentryDns: Option[String] = None)

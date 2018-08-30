@@ -103,8 +103,7 @@ private[database] class MigrationControllerImpl(system: ActorSystem, migrationSe
       .toList
 
   private def createCluster(): Cluster = Cluster.builder
-    .addContactPoint(config.getString("smack.cassandra.contact-point.host"))
-    .withPort(config.getInt("smack.cassandra.contact-point.port"))
+    .addContactPointsWithPorts(Helpers.getCassandraContactsPoints(config))
     .build
 
   private val createKeyspaceQuery: String =

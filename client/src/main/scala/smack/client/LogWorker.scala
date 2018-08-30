@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model.{HttpMethods, HttpRequest, RequestEntity}
+import akka.http.scaladsl.model.{ContentTypes, HttpMethods, HttpRequest, RequestEntity}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{AbruptStageTerminationException, OverflowStrategy, QueueOfferResult}
@@ -20,13 +20,14 @@ import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.util.{Failure, Random, Success}
 
-class LogWorker(parent: ActorRef, host: String, port: Int, requestsPerSecond: Int) extends Actor with ActorLogging
+class LogWorker(parent: ActorRef, host: String, port: Int, requestsPerSecond: Int, isHttps: Boolean) extends Actor with ActorLogging
   with ContextDispatcher with ImplicitMaterializer with Marshalling {
 
   import LogWorker._
 
   private implicit val system: ActorSystem = context.system
 
+  private val s = if (isHttps) "s" else ""
   private val queueSize = requestsPerSecond * 10
   private val randomLength = 8
 
@@ -39,16 +40,19 @@ class LogWorker(parent: ActorRef, host: String, port: Int, requestsPerSecond: In
   override def preStart(): Unit = {
     val userName = randomString(randomLength)
     Marshal(UserCreating(s"$userName@example.com", randomString(randomLength), userName)).to[RequestEntity] flatMap {
-      entity => Http().singleRequest(HttpRequest(uri = s"http://$host:$port/users", method = HttpMethods.POST, entity = entity))
+      entity => Http().singleRequest(
+        HttpRequest(uri = s"http$s://$host:$port/users", method = HttpMethods.POST, entity = entity.withContentType(ContentTypes.`application/json`)))
     } flatMap { createResponse => Unmarshal(createResponse.entity).to[User]
     } flatMap { user => Marshal(SiteCreating(user.id, s"$userName.com")).to[RequestEntity]
-    } flatMap { entity => Http().singleRequest(HttpRequest(uri = s"http://$host:$port/sites", method = HttpMethods.POST, entity = entity))
+    } flatMap { entity => Http().singleRequest(
+      HttpRequest(uri = s"http$s://$host:$port/sites", method = HttpMethods.POST, entity = entity.withContentType(ContentTypes.`application/json`)))
     } flatMap { createResponse => Unmarshal(createResponse.entity).to[Site]
     } map { site => (Marshal(LogEvent("/", "127.0.0.1", "LogWorker")).to[RequestEntity], site)
     } onComplete {
       case Success((eventMarshal, site)) => eventMarshal.onComplete {
         case Success(logEvent) => system.scheduler.schedule(100.millis, 1.second, self,
-          ExecuteRequest(HttpRequest(method = HttpMethods.POST, uri = s"/logs/${site.trackingId}", entity = logEvent)))
+          ExecuteRequest(
+            HttpRequest(method = HttpMethods.POST, uri = s"/logs/${site.trackingId}", entity = logEvent.withContentType(ContentTypes.`application/json`))))
         case Failure(ex) => terminate(ex) }
       case Failure(ex) => terminate(ex)
     }
@@ -121,8 +125,8 @@ object LogWorker {
   val defaultPort: Int = 80
   val defaultRequestsPerSecond: Int = 20
 
-  def props(parent: ActorRef, host: String, port: Int = defaultPort, requestsPerSecond: Int = defaultRequestsPerSecond): Props =
-    Props(new LogWorker(parent, host, port, requestsPerSecond))
+  def props(parent: ActorRef, host: String, port: Int = defaultPort, requestsPerSecond: Int = defaultRequestsPerSecond, isHttps: Boolean): Props =
+    Props(new LogWorker(parent, host, port, requestsPerSecond, isHttps))
   def name: String = "logWorker"
 
   case class ExecuteRequest(request: HttpRequest)

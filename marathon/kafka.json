@@ -1,36 +1,51 @@
 {
-    "id": "kafka",
-    "env": {
-        "KAFKA_ZOOKEEPER_CONNECT": "188.166.36.186:2181/kafka"
+  "id": "kafka",
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "wurstmeister/kafka:2.11-2.0.0",
+      "forcePullImage": true
+    }
+  },
+  "constraints": [
+    [
+      "hostname",
+      "UNIQUE"
+    ]
+  ],
+  "cpus": 1,
+  "env": {
+    "KAFKA_ADVERTISED_HOST_NAME": "_{HOSTNAME_COMMAND}",
+    "HOSTNAME_COMMAND": "echo $HOST",
+    "KAFKA_ZOOKEEPER_CONNECT": "$MESOS_HOST:2181/kafka",
+    "KAFKA_AUTO_CREATE_TOPICS_ENABLE": "false",
+    "JMX_PORT": "9093"
+  },
+  "healthChecks": [
+    {
+      "port": 9092,
+      "protocol": "MESOS_TCP",
+      "gracePeriodSeconds": 300,
+      "intervalSeconds": 60,
+      "timeoutSeconds": 20,
+      "maxConsecutiveFailures": 3
+    }
+  ],
+  "instances": 1,
+  "mem": 1024.0,
+  "networks": [
+    {
+      "mode": "host"
+    }
+  ],
+  "portDefinitions": [
+    {
+      "port": 9092,
+      "name": "node"
     },
-    "networks": [{
-        "mode": "container/bridge"
-    }],
-    "container": {
-        "type": "DOCKER",
-        "docker": {
-            "image": "eciavatta/kafka:2.0.0",
-            "forcePullImage": true
-        },
-        "portMappings": [{
-            "containerPort": 9092,
-            "hostPort": 0,
-            "name": "kafka"
-        },
-        {
-            "hostPort": 0,
-            "name": "jmx"
-        }]
-    },
-    "cpus": 1,
-    "mem": 1024,
-    "instances": 1,
-    "healthChecks": [{
-        "portIndex": 0,
-        "protocol": "MESOS_TCP",
-        "gracePeriodSeconds": 300,
-        "intervalSeconds": 60,
-        "timeoutSeconds": 20,
-        "maxConsecutiveFailures": 3
-    }]
+    {
+      "port": 9093,
+      "name": "jmx"
+    }
+  ]
 }

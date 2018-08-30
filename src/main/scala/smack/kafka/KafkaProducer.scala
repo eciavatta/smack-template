@@ -19,6 +19,7 @@ import smack.kafka.KafkaProducer._
 import smack.kafka.ProtobufSerialization.serializeMessage
 import smack.models.messages.GenerateException
 
+import scala.collection.JavaConverters._
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
@@ -30,7 +31,7 @@ class KafkaProducer(topic: String, partition: Int)
 
   private val producerSettings: ProducerSettings[String, ByteBuffer] =
     ProducerSettings(Helpers.actorConfig.getConfig("akka.kafka.producer"), new StringSerializer, new ByteBufferSerializer)
-      .withBootstrapServers(config.getString("bootstrap-server"))
+      .withBootstrapServers(config.getStringList("bootstrap-servers").asScala.mkString(";"))
   private var kafkaProducer: producer.KafkaProducer[String, ByteBuffer] = _
   private var queue: SourceQueueWithComplete[KafkaMessage] = _
 

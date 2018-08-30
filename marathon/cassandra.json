@@ -1,29 +1,56 @@
 {
-    "id": "cassandra",
-    "cmd": "/opt/kafka/bin/kafka-server-start.sh -Dbroker.id=$RANDOM -Dzookeeper.connect=$ZK_ADDRESS/kafka config/server.properties",
-    "constraints": [["hostname", "UNIQUE"]],
-    "cpus": 1,
-    "env": {
-        "JMX_PORT": "$PORT_JMX"
-    },
-    "healthChecks": [{
-        "portIndex": 0,
-        "protocol": "MESOS_TCP",
-        "gracePeriodSeconds": 300,
-        "intervalSeconds": 60,
-        "timeoutSeconds": 20,
-        "maxConsecutiveFailures": 3
-    }],
-    "mem": 1024,
-    "networks": [{
-        "mode": "host"
-    }],
-    "portDefinitions": [{
-        "port": 9092,
-        "name": "kafka"
+  "id": "cassandra",
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "cassandra:3",
+      "forcePullImage": true
+    }
+  },
+  "constraints": [
+    [
+      "hostname",
+      "UNIQUE"
+    ]
+  ],
+  "cpus": 1,
+  "env": {
+    "CASSANDRA_SEEDS": "$CASSANDRA_CONTACT_POINTS",
+    "CASSANDRA_CLUSTER_NAME": "smack"
+  },
+  "healthChecks": [
+    {
+      "port": 9042,
+      "protocol": "MESOS_TCP",
+      "gracePeriodSeconds": 300,
+      "intervalSeconds": 60,
+      "timeoutSeconds": 20,
+      "maxConsecutiveFailures": 3
+    }
+  ],
+  "instances": 1,
+  "mem": 2048.0,
+  "networks": [
+    {
+      "mode": "host"
+    }
+  ],
+  "portDefinitions": [
+    {
+      "port": 7000,
+      "name": "node"
     },
     {
-        "port": 9093,
-        "name": "jmx"
-    }]
+      "port": 7199,
+      "name": "jmx"
+    },
+    {
+      "port": 9042,
+      "name": "client"
+    },
+    {
+      "port": 9160,
+      "name": "thrift"
+    }
+  ]
 }

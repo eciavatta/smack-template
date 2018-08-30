@@ -10,7 +10,6 @@ abstract class EntryPoint[C] {
   protected val sentryLogger: String = "smack.commons.utils.SentryLogger"
 
   protected val addressPattern: Regex = "^([\\w-\\.]{3,}):(\\d{3,5})$".r
-  protected val zooPattern: Regex = "^([\\w-\\.]{3,}):(\\d{3,5})(\\/\\w+)$$".r
 
   protected def checkAndGetConfig(args: Array[String], emptyConfig: C): C = argumentParser.parse(args, emptyConfig) match {
     case Some(config) => config

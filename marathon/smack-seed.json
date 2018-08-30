@@ -1,14 +1,10 @@
 {
-  "id": "smack-backend",
-  "cmd": [
-    "--akka-seeds $AKKA_SEEDS",
-    "--cassandra-contact-points $CASSANDRA_CONTACT_POINTS",
-    "--debug false",
-    "--environment production",
-    "--kafka-bootstraps $KAFKA_BOOTSTRAPS",
+  "id": "smack-seed",
+  "args": [
+    "--akka-seeds $HOST",
     "--loglevel WARNING",
     "--sentry-dns $SENTRY_DNS",
-    "backend"
+    "seed"
   ],
   "container": {
     "type": "DOCKER",
@@ -24,7 +20,7 @@
       }
     ]
   },
-  "cpus": 1,
+  "cpus": 0.5,
   "fetch": [
     {
       "uri": "file:///etc/docker.tar.gz"
@@ -44,7 +40,7 @@
   "labels": {
     "HAPROXY_0_ENABLED": "false"
   },
-  "mem": 512.0,
+  "mem": 248.0,
   "networks": [
     {
       "mode": "container/bridge"

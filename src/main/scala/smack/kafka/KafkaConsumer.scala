@@ -18,6 +18,7 @@ import smack.commons.utils.Helpers
 import smack.kafka.KafkaConsumer.TestException
 import smack.models.messages.GenerateException
 
+import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 
 class KafkaConsumer(topic: String, group: String, consumingActor: ActorRef)
@@ -27,7 +28,7 @@ class KafkaConsumer(topic: String, group: String, consumingActor: ActorRef)
 
   private val config = Helpers.actorConfig.getConfig("smack.kafka.consumer")
   private val consumerSettings = ConsumerSettings(Helpers.actorConfig.getConfig("akka.kafka.consumer"), new StringDeserializer, new ByteBufferDeserializer)
-                                 .withBootstrapServers(config.getString("bootstrap-server"))
+                                 .withBootstrapServers(config.getStringList("bootstrap-servers").asScala.mkString(";"))
                                  .withGroupId(group)
                                  .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
   private var consumerControl: Consumer.Control = _

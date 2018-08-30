@@ -8,8 +8,7 @@ object DatabaseUtils {
   def getTestKeyspaceName(implicit config: Config): String = config.getString("smack.database.migrations.keyspaceName")
 
   def createCluster()(implicit config: Config): Cluster = Cluster.builder
-    .addContactPoint(config.getString("smack.cassandra.contact-point.host"))
-    .withPort(config.getInt("smack.cassandra.contact-point.port"))
+    .addContactPointsWithPorts(Helpers.getCassandraContactsPoints(config))
     .build()
 
   def createEmptySession()(implicit config: Config): Session = createCluster().connect()

@@ -1,5 +1,4 @@
 import sbt.file
-import sbtassembly.AssemblyPlugin.defaultUniversalScript
 import sbtassembly.{AssemblyKeys, MergeStrategy}
 
 val projectName = "smack-template"
@@ -64,7 +63,6 @@ lazy val analysis = module("analysis")
     scalaVersion := sparkScalaVersion,
   )
   .enablePlugins(AssemblyPlugin)
-  .settings(assemblyAnalyticsSettings: _*)
 
 lazy val client = module("client").dependsOn(commons)
   .settings(
@@ -107,45 +105,20 @@ lazy val assemblySettings = Seq(
   }
 )
 
-// Taken from http://queirozf.com/entries/creating-scala-fat-jars-for-spark-on-sbt-with-sbt-assembly-plugin
-lazy val assemblyAnalyticsSettings = Seq(
-  assemblyMergeStrategy in assembly := {
-    case PathList("org","aopalliance", xs @ _*) => MergeStrategy.last
-    case PathList("javax", "inject", xs @ _*) => MergeStrategy.last
-    case PathList("javax", "servlet", xs @ _*) => MergeStrategy.last
-    case PathList("javax", "activation", xs @ _*) => MergeStrategy.last
-    case PathList("org", "apache", xs @ _*) => MergeStrategy.last
-    case PathList("com", "google", xs @ _*) => MergeStrategy.last
-    case PathList("com", "esotericsoftware", xs @ _*) => MergeStrategy.last
-    case PathList("com", "codahale", xs @ _*) => MergeStrategy.last
-    case PathList("com", "yammer", xs @ _*) => MergeStrategy.last
-    case "about.html" => MergeStrategy.rename
-    case "META-INF/ECLIPSEF.RSA" => MergeStrategy.last
-    case "META-INF/mailcap" => MergeStrategy.last
-    case "META-INF/mimetypes.default" => MergeStrategy.last
-    case "plugin.properties" => MergeStrategy.last
-    case "log4j.properties" => MergeStrategy.last
-    case "git.properties" => MergeStrategy.last // org.apache.arrow
-    case x =>
-      val oldStrategy = (assemblyMergeStrategy in assembly).value
-      oldStrategy(x)
-  }
-)
-
 lazy val dockerSettings = Seq(
   docker := (docker dependsOn assembly).value,
   imageNames in docker := Seq(ImageName(s"$dockerUser/$projectName:$projectVersion"), ImageName(s"$dockerUser/$projectName:latest")),
   dockerfile in docker := {
     val mainArtifact = (AssemblyKeys.assemblyOutputPath in assembly).value
     val clientArtifact = ((AssemblyKeys.assemblyOutputPath in client) / assembly).value
-    val analysisArtifact = ((AssemblyKeys.assemblyOutputPath in analysis) / assembly).value
     val migrateArtifact = ((AssemblyKeys.assemblyOutputPath in migrate) / assembly).value
     val aspectWeaverArtifact = file("agents/aspectjweaver-1.9.1.jar")
+    // val analysisArtifact = ((AssemblyKeys.assemblyOutputPath in analysis) / assembly).value
     val runScript = file("scripts/smack-run")
 
     new sbtdocker.mutable.Dockerfile {
       from("openjdk:8u181-jre")
-      copy(Seq(aspectWeaverArtifact, mainArtifact, clientArtifact, analysisArtifact, migrateArtifact, aspectWeaverArtifact, runScript), "/app/")
+      copy(Seq(aspectWeaverArtifact, mainArtifact, clientArtifact, migrateArtifact, aspectWeaverArtifact, runScript), "/app/")
       // env("JAVA_AGENTS", s"/app/${aspectWeaverArtifact.name}")
       env("VERSION", projectVersion)
       entryPoint("/app/smack-run")

@@ -8,41 +8,13 @@ services:
     environment:
       KAFKA_ADVERTISED_HOST_NAME: kafka
 
-  frontend:
+  seed:
     image: eciavatta/smack-template:latest
-    command: -d false -l INFO -a zookeeper:2181/akka frontend
-    depends_on:
-      - "migrate"
+    command: -l INFO -a seed:5000 seed
     environment:
-      HOST: frontend
-    ports:
-      - "8080:8080"
-
-  backend:
-    image: eciavatta/smack-template:latest
-    command: -l INFO -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 backend
-    depends_on:
-      cassandra:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      migrate:
-        condition: service_started
-    environment:
-      HOST: backend
-
-  service:
-    image: eciavatta/smack-template:latest
-    command: -l INFO -a zookeeper:2181/akka -c cassandra:9042 -k kafka:9092 service
-    depends_on:
-      cassandra:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      migrate:
-        condition: service_started
-    environment:
-      HOST: service
+      HOST: seed
+      PORT_REMOTE: 5000
+      PORT_BIND_REMOTE: 5000
 
   migrate:
     image: eciavatta/smack-template:latest
@@ -50,3 +22,51 @@ services:
     depends_on:
       cassandra:
         condition: service_healthy
+
+  frontend:
+    image: eciavatta/smack-template:latest
+    command: -d false -l INFO -a seed:5000 frontend
+    depends_on:
+      seed:
+        condition: service_started
+    environment:
+      HOST: frontend
+      PORT_REMOTE: 5001
+      PORT_BIND_REMOTE: 5001
+      PORT_HTTP: 8080
+    ports:
+      - "8080:8080"
+
+  backend:
+    image: eciavatta/smack-template:latest
+    command: -l INFO -a seed:5000 -c cassandra:9042 -k kafka:9092 backend
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      seed:
+        condition: service_started
+      migrate:
+        condition: service_started
+    environment:
+      HOST: backend
+      PORT_REMOTE: 5002
+      PORT_BIND_REMOTE: 5002
+
+  service:
+    image: eciavatta/smack-template:latest
+    command: -l INFO -a seed:5000 -c cassandra:9042 -k kafka:9092 service
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      seed:
+        condition: service_started
+      migrate:
+        condition: service_started
+    environment:
+      HOST: service
+      PORT_REMOTE: 5003
+      PORT_BIND_REMOTE: 5003

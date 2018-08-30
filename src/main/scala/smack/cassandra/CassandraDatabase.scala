@@ -23,8 +23,7 @@ class CassandraDatabase(keySpace: String) extends Actor
   private val config = Helpers.actorConfig.getConfig("smack.cassandra")
 
   private val cassandraCluster: Cluster = Cluster.builder
-    .addContactPoint(config.getString("contact-point.host"))
-    .withPort(config.getInt("contact-point.port"))
+    .addContactPointsWithPorts(Helpers.getCassandraContactsPoints(Helpers.actorConfig))
     .build()
 
   private implicit var cassandraSession: Session = _
