@@ -121,6 +121,7 @@ lazy val dockerSettings = Seq(
       copy(Seq(aspectWeaverArtifact, mainArtifact, clientArtifact, migrateArtifact, aspectWeaverArtifact, runScript), "/app/")
       // env("JAVA_AGENTS", s"/app/${aspectWeaverArtifact.name}")
       env("VERSION", projectVersion)
+      env("APP_PATH", "/app")
       entryPoint("/app/run-main")
     }
   }

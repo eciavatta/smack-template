@@ -17,17 +17,16 @@ else
 fi
 
 # Find the package and the main
-APP_PATH=/app/
 if [ "$1" == "client" ]; then
-  LAUNCH_JAR="${APP_PATH}smack-client-$VERSION.jar"
+  LAUNCH_JAR="${APP_PATH}/smack-client-$VERSION.jar"
   LAUNCH_MAIN=smack.entrypoints.ClientMain
   ARGS=${@:2}
 elif [ "$1" == "migrate" ]; then
-  LAUNCH_JAR="${APP_PATH}smack-migrate-$VERSION.jar"
+  LAUNCH_JAR="${APP_PATH}/smack-migrate-$VERSION.jar"
   LAUNCH_MAIN=smack.entrypoints.MigrateMain
   ARGS=${@:2}
 else
-  LAUNCH_JAR="${APP_PATH}smack-template-$VERSION.jar"
+  LAUNCH_JAR="${APP_PATH}/smack-template-$VERSION.jar"
   LAUNCH_MAIN=smack.entrypoints.Main
   ARGS=$@
 fi

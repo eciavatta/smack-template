@@ -1,0 +1,31 @@
+{
+  "id": "smack-client",
+  "args": [
+    "client",
+    "--debug false",
+    "--host app.do.eciavatta.it",
+    "--loglevel info",
+    "--parallelism 8",
+    "--requests-per-second 100"
+  ],
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "eciavatta/smack-template:latest",
+      "forcePullImage": true
+    }
+  },
+  "cpus": 0.25,
+  "fetch": [
+    {
+      "uri": "file:///etc/docker.tar.gz"
+    }
+  ],
+  "instances": 1,
+  "mem": 256.0,
+  "networks": [
+    {
+      "mode": "host"
+    }
+  ]
+}

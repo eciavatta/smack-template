@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+generate_cluster_id() {
+  cat /dev/urandom | tr -dc 'a-z' | fold -w 8 | head -n 1
+}
+
+create_app() {
+  echo "Creating $1 marathon app.."
+  local res=$(curl -s -X POST http://$MESOS_HOST:8080/v2/apps -d "$2" -H "Content-type: application/json")
+  local id=$(echo $res | jq -r '.deployments[0].id')
+  echo "[CREATED] App name: $1, id: $id"
+}
+
+delete_app() {
+  echo "Destroying $1 marathon app.."
+  local res=$(curl -s -X DELETE http://$MESOS_HOST:8080/v2/apps/$1)
+  local deploymentId=$(echo $res | jq -r '.deploymentId')
+  echo "[DESTROYED] App name: $1, deploymentId: $deploymentId"
+}
+
+query_app() {
+  curl -s -X GET http://$MESOS_HOST:8080/v2/apps/$1 | jq -r $2
+}
+
+is_running() {
+  [ $(query_app $1 '.app.tasks[0].state') == "TASK_RUNNING" ]
+}
+
+is_healthy() {
+  [ $(query_app $1 '.app.tasks[0].healthCheckResults[0].alive') == "true" ]
+}
+
+get_host() {
+  echo $(query_app $1 '.app.tasks[0].host')
+}
+
+get_port_index() {
+  echo $(query_app $1 ".app.tasks[0].ports[$2]")
+}
+
+wait_healthyness() {
+  printf "Wait for $1 healthyness"
+  until is_healthy $1
+  do
+    sleep 2
+    printf "."
+  done
+  printf " OK\n"
+}

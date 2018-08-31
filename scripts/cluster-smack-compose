@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+if [ -f smack-env.sh ]; then
+  source ./smack-env.sh
+fi
+
+source ./cluster-functions
+
+if [ $# -ne 1 ] && [ "$1" != "up" ] && [ "$1" != "down" ]; then
+  echo "Invalid arguments. Usage: $0 [up|down]"
+  exit 1
+fi
+
+if [ "$1" == "up" ]; then
+
+  # launch one smack-seed instance
+  smackSeed=`cat $APP_PATH/marathon/smack-seed.json`
+  smackSeed="${smackSeed/\$DEBUG/$DEBUG}"
+  smackSeed="${smackSeed/\$ENVIRONMENT/$ENVIRONMENT}"
+  smackSeed="${smackSeed/\$LOG_LEVEL/$LOG_LEVEL}"
+  create_app "smack-seed" "${smackSeed/\$SENTRY_DNS/$SENTRY_DNS}"
+
+  wait_healthyness "smack-seed"
+  akkaSeedAddr=$(get_host "smack-seed")":"$(get_port_index "smack-seed" 0)
+  cassandraSeedAddr=$(get_host "cassandra-seed")":9042"
+  kafkaSeedAddr=$(get_host "kafka-seed")":9092"
+
+  #launch three smack-frontend instances
+  smackFrontend=`cat $APP_PATH/marathon/smack-frontend.json`
+  smackFrontend="${smackFrontend/\$AKKA_SEEDS/$akkaSeedAddr}"
+  smackFrontend="${smackFrontend/\$DEBUG/$DEBUG}"
+  smackFrontend="${smackFrontend/\$ENVIRONMENT/$ENVIRONMENT}"
+  smackFrontend="${smackFrontend/\$LOG_LEVEL/$LOG_LEVEL}"
+  smackFrontend="${smackFrontend/\$SENTRY_DNS/$SENTRY_DNS}"
+  create_app "smack-frontend" "${smackFrontend/\"instances\": 1/\"instances\": $SMACK_FRONTEND_INSTANCES}"
+
+  #launch three smack-backend instances
+  smackBackend=`cat $APP_PATH/marathon/smack-backend.json`
+  smackBackend="${smackBackend/\$AKKA_SEEDS/$akkaSeedAddr}"
+  smackBackend="${smackBackend/\$DEBUG/$DEBUG}"
+  smackBackend="${smackBackend/\$ENVIRONMENT/$ENVIRONMENT}"
+  smackBackend="${smackBackend/\$LOG_LEVEL/$LOG_LEVEL}"
+  smackBackend="${smackBackend/\$CASSANDRA_CONTACT_POINTS/$cassandraSeedAddr}"
+  smackBackend="${smackBackend/\$KAFKA_BOOTSTRAPS/$kafkaSeedAddr}"
+  smackBackend="${smackBackend/\$SENTRY_DNS/$SENTRY_DNS}"
+  create_app "smack-backend" "${smackBackend/\"instances\": 1/\"instances\": $SMACK_BACKEND_INSTANCES}"
+
+  #launch three smack-service instances
+  smackService=`cat $APP_PATH/marathon/smack-service.json`
+  smackService="${smackService/\$AKKA_SEEDS/$akkaSeedAddr}"
+  smackService="${smackService/\$DEBUG/$DEBUG}"
+  smackService="${smackService/\$ENVIRONMENT/$ENVIRONMENT}"
+  smackService="${smackService/\$LOG_LEVEL/$LOG_LEVEL}"
+  smackService="${smackService/\$CASSANDRA_CONTACT_POINTS/$cassandraSeedAddr}"
+  smackService="${smackService/\$KAFKA_BOOTSTRAPS/$kafkaSeedAddr}"
+  smackService="${smackService/\$SENTRY_DNS/$SENTRY_DNS}"
+  create_app "smack-service" "${smackService/\"instances\": 1/\"instances\": $SMACK_SERVICE_INSTANCES}"
+
+fi
+
+if [ "$1" == "down" ]; then
+
+  # delete smack-service instances
+  delete_app "smack-service"
+
+  # delete smack-backend instances
+  delete_app "smack-backend"
+
+  # delete smack-frontend instances
+  delete_app "smack-frontend"
+  
+  # delete smack-seed instance
+  delete_app "smack-seed"
+
+fi

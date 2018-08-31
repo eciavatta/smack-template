@@ -40,11 +40,9 @@ object Dependencies {
   val logback         = "ch.qos.logback"             %  "logback-classic"           % logbackVersion
 
   // analysis dependencies
-  val nanoHttpd       = "org.nanohttpd"              %  "nanohttpd"                 % nanoHttpdVersion
   val quartz          = "org.quartz-scheduler"       %  "quartz"                    % quartzVersion       slf4jExclude()
   val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion        nettyAllExclude() jodaTimeExclude()
   val sparkCore       = "org.apache.spark"           %% "spark-core"                % sparkVersion        % Provided
-  val sparkMesos      = "org.apache.spark"           %% "spark-mesos"               % sparkVersion        % Provided
   val sparkSql        = "org.apache.spark"           %% "spark-sql"                 % sparkVersion        % Provided
 
   val rootDependencies = Seq(akkaActor, akkaCluster, akkaHttp, akkaMetrics, akkaRemote, akkaSprayJson, akkaStream, akkaStreamKafka, cassandraDriver,
@@ -52,7 +50,7 @@ object Dependencies {
                              akkaHttpTestkit, akkaMulTestkit, akkaTestkit, embeddedKafka, scalacheck, scalatest,
                              guava, jacksonCore, kafkaClients)
 
-  val analysisDependencies = Seq(sparkCassandra, sparkCore, sparkSql, scopt, quartz, sentry, sentryLog4j, nanoHttpd, uuidGenerator)
+  val analysisDependencies = Seq(sparkCassandra, sparkCore, sparkSql, scopt, quartz, sentry, sentryLog4j, uuidGenerator)
 
   val clientDependencies = Seq(akkaActor, akkaHttp, akkaSprayJson, akkaStream, scopt)
 

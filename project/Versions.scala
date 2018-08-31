@@ -13,7 +13,6 @@ object Versions {
   val kamonDatadogVersion      = "1.0.0"
   val kamonExecutorsVersion    = "1.0.1"
   val logbackVersion           = "1.2.3"
-  val nanoHttpdVersion         = "2.3.1"
   val quartzVersion            = "2.3.0"
   val scalaCheckVersion        = "1.14.0"
   val scalaTestVersion         = "3.0.5"

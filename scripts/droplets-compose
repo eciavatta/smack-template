@@ -119,17 +119,17 @@ fi
 if [ "$1" == "down" ]; then
 
   # delete domains
-  i=1
-  while [ $i -le $2 ]; do
+  i=$2
+  until [ $i -le 0 ]; do
     delete_domain_record "mesos-agent$i"
-    let i=i+1
+    let i-=1
   done
   
   # delete droplets
-  i=1
-  while [ $i -le $2 ]; do
+  i=$2
+  until [ $i -le 0 ]; do
     delete_droplet "mesos-agent$i"
-    let i=i+1
+    let i-=1
   done
 
 fi

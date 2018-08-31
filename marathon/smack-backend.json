@@ -3,10 +3,10 @@
   "args": [
     "--akka-seeds $AKKA_SEEDS",
     "--cassandra-contact-points $CASSANDRA_CONTACT_POINTS",
-    "--debug false",
-    "--environment production",
+    "--debug $DEBUG",
+    "--environment $ENVIRONMENT",
     "--kafka-bootstraps $KAFKA_BOOTSTRAPS",
-    "--loglevel WARNING",
+    "--loglevel $LOG_LEVEL",
     "--sentry-dns $SENTRY_DNS",
     "backend"
   ],
@@ -24,7 +24,7 @@
       }
     ]
   },
-  "cpus": 1,
+  "cpus": 0.5,
   "fetch": [
     {
       "uri": "file:///etc/docker.tar.gz"

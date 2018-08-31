@@ -2,9 +2,9 @@
   "id": "smack-seed",
   "args": [
     "--akka-seeds $HOST:$PORT_REMOTE",
-    "--environment production",
-    "--debug false",
-    "--loglevel WARNING",
+    "--environment $ENVIRONMENT",
+    "--debug $DEBUG",
+    "--loglevel $LOG_LEVEL",
     "--sentry-dns $SENTRY_DNS",
     "seed"
   ],
@@ -48,7 +48,7 @@
   "labels": {
     "HAPROXY_0_ENABLED": "false"
   },
-  "mem": 248.0,
+  "mem": 512.0,
   "networks": [
     {
       "mode": "container/bridge"

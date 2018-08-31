@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+if [ -f smack-env.sh ]; then
+  source ./smack-env.sh
+fi
+
+source ./cluster-functions
+
+if [ $# -ne 1 ] && [ "$1" != "up" ] && [ "$1" != "down" ]; then
+  echo "Invalid arguments. Usage: $0 [up|down]"
+  exit 1
+fi
+
+if [ "$1" == "up" ]; then
+ 
+  # generate cluster id
+  clusterId=$(generate_cluster_id)
+  echo "Start cluster with id ----->     $clusterId     <-----"
+  
+  # launch one kafka-seed instance
+  kafkaSeed=`cat $APP_PATH/marathon/kafka.json`
+  kafkaSeed="${kafkaSeed/kafka/kafka-seed}"
+  kafkaSeed="${kafkaSeed/\$CLUSTER_ID/$clusterId}"
+  create_app "kafka-seed" "${kafkaSeed/\$MESOS_HOST/$MESOS_HOST}"
+
+  # launch one cassandra-seed instance
+  cassandraSeed=`cat $APP_PATH/marathon/cassandra.json`
+  cassandraSeed="${cassandraSeed/cassandra/cassandra-seed}"
+  cassandraSeed="${cassandraSeed/\$CLUSTER_ID/$clusterId}"
+  create_app "cassandra-seed" "${cassandraSeed/\$CASSANDRA_CONTACT_POINTS/}"
+
+  # launch two kafka-node instances
+  wait_healthyness "kafka-seed"
+  kafkaNode=`cat $APP_PATH/marathon/kafka.json`
+  kafkaNode="${kafkaNode/kafka/kafka-node}"
+  kafkaNode="${kafkaNode/\$CLUSTER_ID/$clusterId}"
+  kafkaNode="${kafkaNode/\"instances\": 1/\"instances\": $KAFKA_NODE_INSTANCES}"
+  create_app "kafka-node" "${kafkaNode/\$MESOS_HOST/$MESOS_HOST}"
+
+  # launch two cassandra-node instances
+  wait_healthyness "cassandra-seed"
+  cassandraNode=`cat $APP_PATH/marathon/cassandra.json`
+  cassandraNode="${cassandraNode/cassandra/cassandra-node}"
+  cassandraNode="${cassandraNode/\$CLUSTER_ID/$clusterId}"
+  cassandraNode="${cassandraNode/\"instances\": 1/\"instances\": $CASSANDRA_NODE_INSTANCES}"
+  cassandraSeedHost=$(get_host "cassandra-seed")
+  create_app "cassandra-node" "${cassandraNode/\$CASSANDRA_CONTACT_POINTS/$cassandraSeedHost}"
+
+  wait_healthyness "kafka-node"
+  wait_healthyness "cassandra-node"
+  
+  # execute migration
+  echo "Execute project migration.."
+  $APP_PATH/scripts/run-main migrate --debug false --force --create-keyspace --environment production --loglevel info --cassandra-contact-points="$cassandraSeedHost:9042"
+  
+  # create kafka logs topic
+  echo "Creating kafka $LOG_TOPIC topic.."
+  $KAFKA_HOME/bin/kafka-topics.sh --zookeeper $MESOS_HOST:2181/kafka_$clusterId --create --topic $LOG_TOPIC --partitions=$LOG_PARTITIONS --replication-factor $LOG_REPLICATION_FACTOR
+
+fi
+
+if [ "$1" == "down" ]; then
+  
+  # delete cassandra-node instances
+  delete_app "cassandra-node"
+
+  # echo "Deleting kafka $LOG_TOPIC topic.."
+  # $KAFKA_HOME/bin/kafka-topics.sh --zookeeper $MESOS_HOST:2181/kafka --alter --topic $LOG_TOPIC --config retention.ms=1000
+  # $KAFKA_HOME/bin/kafka-topics.sh --zookeeper $MESOS_HOST:2181/kafka --delete --topic $LOG_TOPIC
+
+  # delete kafka-node instance
+  delete_app "kafka-node"
+  
+    # delete cassandra-seed instance
+  delete_app "cassandra-seed"
+
+  # delete kafka-seed instance
+  delete_app "kafka-seed"
+
+fi

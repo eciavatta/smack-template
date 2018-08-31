@@ -40,11 +40,11 @@ class LogWorker(parent: ActorRef, host: String, port: Int, requestsPerSecond: In
     val userName = randomString(randomLength)
     Marshal(UserCreating(s"$userName@example.com", randomString(randomLength), userName)).to[RequestEntity] flatMap {
       entity => Http().singleRequest(
-        HttpRequest(uri = s"$host:$port/users", method = HttpMethods.POST, entity = entity.withContentType(ContentTypes.`application/json`)))
+        HttpRequest(uri = s"http://$host:$port/users", method = HttpMethods.POST, entity = entity.withContentType(ContentTypes.`application/json`)))
     } flatMap { createResponse => Unmarshal(createResponse.entity).to[User]
     } flatMap { user => Marshal(SiteCreating(user.id, s"$userName.com")).to[RequestEntity]
     } flatMap { entity => Http().singleRequest(
-      HttpRequest(uri = s"$host:$port/sites", method = HttpMethods.POST, entity = entity.withContentType(ContentTypes.`application/json`)))
+      HttpRequest(uri = s"http://$host:$port/sites", method = HttpMethods.POST, entity = entity.withContentType(ContentTypes.`application/json`)))
     } flatMap { createResponse => Unmarshal(createResponse.entity).to[Site]
     } map { site => (Marshal(LogEvent("/", "127.0.0.1", "LogWorker")).to[RequestEntity], site)
     } onComplete {
