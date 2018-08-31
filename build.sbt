@@ -114,14 +114,14 @@ lazy val dockerSettings = Seq(
     val migrateArtifact = ((AssemblyKeys.assemblyOutputPath in migrate) / assembly).value
     val aspectWeaverArtifact = file("agents/aspectjweaver-1.9.1.jar")
     // val analysisArtifact = ((AssemblyKeys.assemblyOutputPath in analysis) / assembly).value
-    val runScript = file("scripts/smack-run")
+    val runScript = file("scripts/run-main")
 
     new sbtdocker.mutable.Dockerfile {
       from("openjdk:8u181-jre")
       copy(Seq(aspectWeaverArtifact, mainArtifact, clientArtifact, migrateArtifact, aspectWeaverArtifact, runScript), "/app/")
       // env("JAVA_AGENTS", s"/app/${aspectWeaverArtifact.name}")
       env("VERSION", projectVersion)
-      entryPoint("/app/smack-run")
+      entryPoint("/app/run-main")
     }
   }
 )

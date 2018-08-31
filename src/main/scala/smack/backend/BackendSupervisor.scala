@@ -1,6 +1,6 @@
 package smack.backend
 
-import akka.actor.SupervisorStrategy.Resume
+import akka.actor.SupervisorStrategy.Restart
 import akka.actor.{Actor, ActorLogging, OneForOneStrategy, Props}
 import smack.backend.controllers.{LogController, SiteController, UserController}
 import smack.commons.serialization.MessageSerializer.{SiteRequest, UserRequest}
@@ -13,7 +13,7 @@ class BackendSupervisor extends Actor with ActorLogging {
   private lazy val logController = context.actorOf(LogController.props, LogController.name)
 
   override def supervisorStrategy: OneForOneStrategy = OneForOneStrategy() {
-    case _ => Resume
+    case _ => Restart
   }
 
   override def receive: Receive = {

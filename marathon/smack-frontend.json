@@ -28,7 +28,7 @@
       }
     ]
   },
-  "cpus": 0.5,
+  "cpus": 1,
   "fetch": [
     {
       "uri": "file:///etc/docker.tar.gz"
@@ -49,7 +49,7 @@
     "HAPROXY_0_GROUP": "backend",
     "HAPROXY_1_ENABLED": "false"
   },
-  "mem": 248.0,
+  "mem": 512.0,
   "networks": [
     {
       "mode": "container/bridge"

@@ -15,7 +15,14 @@ object Main extends EntryPoint[Main] {
   private val configRoles: Set[String] = Set("frontend", "backend", "service", "seed")
 
   def main(args: Array[String]): Unit = {
-    val params = checkAndGetConfig(args, Main())
+    var params = checkAndGetConfig(args, Main())
+
+    if (params.cassandraContactPoints.isEmpty) {
+      params = params.copy(cassandraContactPoints = Seq("127.0.0.1:9042"))
+    }
+    if (params.kafkaBootstrapServers.isEmpty) {
+      params = params.copy(kafkaBootstrapServers = Seq("127.0.0.1:9092"))
+    }
 
     val datadogAgentRegex = addressPattern.findFirstMatchIn(params.datadogAgent).get
 
@@ -125,7 +132,7 @@ object Main extends EntryPoint[Main] {
 
 }
 
-case class Main(akkaSeeds: Seq[String] = Seq(), cassandraContactPoints: Seq[String] = Seq("127.0.0.1:9042"), datadogAgent: String = "127.0.0.1:8126",
+case class Main(akkaSeeds: Seq[String] = Seq(), cassandraContactPoints: Seq[String] = Seq(), datadogAgent: String = "127.0.0.1:8126",
                 datadogAgentEnabled: Boolean = false, datadogApi: String = "", datadogApiEnabled: Boolean = false, debug: Option[Boolean] = None,
-                environment: String = "development", kafkaBootstrapServers: Seq[String] = Seq("127.0.0.1:9092"), logLevel: String = "INFO", role: String = "",
+                environment: String = "development", kafkaBootstrapServers: Seq[String] = Seq(), logLevel: String = "INFO", role: String = "",
                 sentryDns: Option[String] = None)

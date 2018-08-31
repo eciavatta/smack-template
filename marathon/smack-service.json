@@ -5,9 +5,8 @@
     "--cassandra-contact-points $CASSANDRA_CONTACT_POINTS",
     "--debug false",
     "--environment production",
-    "--kafka-bootstraps $KAFKA_BOOTSTRAPS:9092",
+    "--kafka-bootstraps $KAFKA_BOOTSTRAPS",
     "--loglevel WARNING",
-    "--sentry-dns $SENTRY_DNS",
     "service"
   ],
   "container": {
@@ -24,7 +23,7 @@
       }
     ]
   },
-  "cpus": 0.5,
+  "cpus": 1,
   "fetch": [
     {
       "uri": "file:///etc/docker.tar.gz"
@@ -44,7 +43,7 @@
   "labels": {
     "HAPROXY_0_ENABLED": "false"
   },
-  "mem": 248.0,
+  "mem": 512.0,
   "networks": [
     {
       "mode": "container/bridge"

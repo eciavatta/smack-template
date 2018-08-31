@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+
+if [ -f smack-env.sh ]; then
+  source ./smack-env.sh
+fi
+
+get_droplet_id() {
+  if [ -z "$dropletsList" ]; then
+    dropletsList=$(curl -s -X GET -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/droplets?page=1&per_page=$MAX_DROPLETS")
+  fi
+  echo "$dropletsList" | jq -r --arg instance "$1" '.droplets[] | select(.name == $instance) | .id'
+}
+
+create_droplet() {
+  echo "Creating droplet with name $1.."
+  local res=$(curl -s -X POST -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/droplets" -d "$2" -H "Content-type: application/json")
+  local id=$(echo $res | jq -r '.droplet.id')
+  echo "[CREATED] Droplet name: $1, id: $id"
+}
+
+delete_droplet() {
+  echo "Destroying droplet with name $1.."
+  local res=$(curl -s -X DELETE -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/droplets/$(get_droplet_id $1)")
+  echo "[DESTROYED] App name: $1"
+}
+
+query_droplet() {
+  curl -s -X GET -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/droplets/$(get_droplet_id $1)" | jq -r $2
+}
+
+get_domain_record_id() {
+  if [ -z "$domainRecordsList" ]; then
+    domainRecordsList=$(curl -s -X GET -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/domains/$DO_DOMAIN/records")
+  fi
+  echo "$domainRecordsList" | jq -r --arg instance "$1" '.domain_records[] | select(.name == $instance) | .id'
+}
+
+create_domain_record() {
+  echo "Creating domain record $1.$DO_DOMAIN"
+  local res=$(curl -s -X POST -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/domains/$DO_DOMAIN/records" -d "$2" -H "Content-type: application/json")
+}
+
+delete_domain_record() {
+  echo "Deleting domain record $1.$DO_DOMAIN"
+  local res=$(curl -s -X DELETE -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/domains/$DO_DOMAIN/records/$(get_domain_record_id $1)")
+}
+
+is_active() {
+  [ $(query_droplet $1 '.droplet.status') == "active" ]
+}
+
+get_ip_address() {
+  echo $(query_droplet $1 '.droplet.networks.v4[0].ip_address')
+}
+
+wait_droplet_up() {
+  printf "Wait for $1 to become up"
+  until is_active $1
+  do
+    sleep 2
+    printf "."
+  done
+  printf " OK\n"
+}
+
+if [ $# -ne 2 ]; then
+  echo "Invalid arguments. Usage: $0 [up|down] <n-instances>"
+  exit 1
+fi
+
+if [ "$1" != "up" ] && [ "$1" != "down" ]; then
+  echo "Invalid arguments. Usage: $0 [up|down] <n-instances>"
+  exit 1
+fi
+
+if [ $2 -gt $MAX_DROPLETS ]; then
+  echo "Max droplets limit: $MAX_DROPLETS"
+  exit 1
+fi
+
+if [ "$1" == "up" ]; then
+
+  # create droples
+  echo "Creating $2 droplets.."
+  i=1
+  while [ $i -le $2 ]; do
+    name="mesos-agent$i"
+    createDroplet=`cat $APP_PATH/scripts/digitalocean/create-droplet.json.template`
+    createDroplet="${createDroplet/\$DROPLET_NAME/$name}"
+    createDroplet="${createDroplet/\$DROPLET_IMAGE_ID/$DO_IMAGE_ID}"
+    createDroplet="${createDroplet/\$DROPLET_SSH_KEY_ID/$DO_SSH_KEY_ID}"
+
+    create_droplet "$name" "$createDroplet"
+    let i=i+1
+  done
+
+  # wait until they became up
+  i=1
+  while [ $i -le $2 ]; do
+    wait_droplet_up "mesos-agent$i"
+    let i=i+1
+  done
+
+  # associate domain
+  i=1
+  while [ $i -le $2 ]; do
+    name="mesos-agent$i"
+    ip=$(get_ip_address "$name")
+    createDomainRecord=`cat $APP_PATH/scripts/digitalocean/create-domain-record.json.template`
+    createDomainRecord="${createDomainRecord/\$RECORD_NAME/$name}"
+    createDomainRecord="${createDomainRecord/\$RECORD_IP/$ip}"
+
+    create_domain_record "$name" "$createDomainRecord"
+    let i=i+1
+  done
+
+fi
+
+if [ "$1" == "down" ]; then
+
+  # delete domains
+  i=1
+  while [ $i -le $2 ]; do
+    delete_domain_record "mesos-agent$i"
+    let i=i+1
+  done
+  
+  # delete droplets
+  i=1
+  while [ $i -le $2 ]; do
+    delete_droplet "mesos-agent$i"
+    let i=i+1
+  done
+
+fi

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+if [ -f smack-env.sh ]; then
+  source ./smack-env.sh
+fi
+
 # Find the java binary
 if [ -n "${JAVA_HOME}" ]; then
   RUNNER="${JAVA_HOME}/bin/java"
@@ -17,19 +21,15 @@ APP_PATH=/app/
 if [ "$1" == "client" ]; then
   LAUNCH_JAR="${APP_PATH}smack-client-$VERSION.jar"
   LAUNCH_MAIN=smack.entrypoints.ClientMain
-  ARGS="${@:2}"
+  ARGS=${@:2}
 elif [ "$1" == "migrate" ]; then
   LAUNCH_JAR="${APP_PATH}smack-migrate-$VERSION.jar"
   LAUNCH_MAIN=smack.entrypoints.MigrateMain
-  ARGS="${@:2}"
-elif [ "$1" == "analysis" ]; then
-  LAUNCH_JAR="${APP_PATH}smack-analysis-$VERSION.jar"
-  LAUNCH_MAIN=smack.entrypoints.AnalysisMain
-  ARGS="${@:2}"
+  ARGS=${@:2}
 else
   LAUNCH_JAR="${APP_PATH}smack-template-$VERSION.jar"
   LAUNCH_MAIN=smack.entrypoints.Main
-  ARGS="$@"
+  ARGS=$@
 fi
 
 if [ ! -z "$JAVA_AGENTS" ]; then
@@ -38,5 +38,7 @@ else
   JAVA_OPT_AGENTS=""
 fi
 
+eval echo Executing with args: $ARGS
+
 # Execute the command
-$RUNNER -Xmx128m $JAVA_OPT_AGENTS -cp $LAUNCH_JAR $LAUNCH_MAIN $ARGS
+eval $RUNNER -Xmx128m $JAVA_OPT_AGENTS -cp $LAUNCH_JAR $LAUNCH_MAIN $ARGS

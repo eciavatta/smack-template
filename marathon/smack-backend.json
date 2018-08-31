@@ -1,6 +1,6 @@
 {
   "id": "smack-backend",
-  "cmd": [
+  "args": [
     "--akka-seeds $AKKA_SEEDS",
     "--cassandra-contact-points $CASSANDRA_CONTACT_POINTS",
     "--debug false",

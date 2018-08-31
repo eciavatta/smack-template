@@ -12,15 +12,15 @@ import scala.concurrent.duration._
 class WebClient extends Actor with ActorLogging with ContextDispatcher {
 
   import smack.client.WebClient._
+
   private val clientConfig = Helpers.actorConfig.getConfig("smack.client")
   private val host = clientConfig.getString("host")
   private val port = clientConfig.getInt("port")
   private val requestsPerSecond = clientConfig.getInt("requests-per-second")
   private val parallelism = clientConfig.getInt("parallelism")
   private val maxCount = clientConfig.getLong("count")
-  private val isHttps = clientConfig.getBoolean("https")
 
-  private val logProps = LogWorker.props(self, host, port, requestsPerSecond, isHttps)
+  private val logProps = LogWorker.props(self, host, port, requestsPerSecond)
   private val logRouter = context.actorOf(BroadcastPool(parallelism).props(logProps), "logRouter")
 
   private var startTime: Long = _

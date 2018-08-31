@@ -41,10 +41,11 @@ object Dependencies {
 
   // analysis dependencies
   val nanoHttpd       = "org.nanohttpd"              %  "nanohttpd"                 % nanoHttpdVersion
-  val quartz          = "org.quartz-scheduler"       %  "quartz"                    % quartzVersion
-  val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion      % Provided
-  val sparkCore       = "org.apache.spark"           %% "spark-core"                % sparkVersion      % Provided
-  val sparkSql        = "org.apache.spark"           %% "spark-sql"                 % sparkVersion      % Provided
+  val quartz          = "org.quartz-scheduler"       %  "quartz"                    % quartzVersion       slf4jExclude()
+  val sparkCassandra  = "com.datastax.spark"         %% "spark-cassandra-connector" % sparkVersion        nettyAllExclude() jodaTimeExclude()
+  val sparkCore       = "org.apache.spark"           %% "spark-core"                % sparkVersion        % Provided
+  val sparkMesos      = "org.apache.spark"           %% "spark-mesos"               % sparkVersion        % Provided
+  val sparkSql        = "org.apache.spark"           %% "spark-sql"                 % sparkVersion        % Provided
 
   val rootDependencies = Seq(akkaActor, akkaCluster, akkaHttp, akkaMetrics, akkaRemote, akkaSprayJson, akkaStream, akkaStreamKafka, cassandraDriver,
                              kamonAkkaRemote, kamonDatadog, kamonExecutors, scopt, uuidGenerator,

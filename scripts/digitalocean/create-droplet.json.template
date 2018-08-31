@@ -1,0 +1,16 @@
+{
+  "name": "$DROPLET_NAME",
+  "region": "ams3",
+  "size": "s-2vcpu-4gb",
+  "image": $DROPLET_IMAGE_ID,
+  "ssh_keys": [
+    $DROPLET_SSH_KEY_ID
+  ],
+  "backups": false,
+  "ipv6": false,
+  "user_data": null,
+  "private_networking": null,
+  "tags": [
+    "agent"
+  ]
+}

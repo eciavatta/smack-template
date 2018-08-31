@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+/app/scripts/run-main client --debug false --host 159.65.197.158 --port 31222 --loglevel info --parallelism 8 --requests-per-second 300

@@ -1,7 +1,9 @@
 {
   "id": "smack-seed",
   "args": [
-    "--akka-seeds $HOST",
+    "--akka-seeds $HOST:$PORT_REMOTE",
+    "--environment production",
+    "--debug false",
     "--loglevel WARNING",
     "--sentry-dns $SENTRY_DNS",
     "seed"
@@ -20,6 +22,12 @@
       }
     ]
   },
+  "constraints": [
+    [
+      "hostname",
+      "UNIQUE"
+    ]
+  ],
   "cpus": 0.5,
   "fetch": [
     {

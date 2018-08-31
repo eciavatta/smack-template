@@ -12,7 +12,11 @@ import scala.util.{Failure, Success}
 object MigrateMain extends EntryPoint[MigrateMain] {
 
   def main(args: Array[String]): Unit = {
-    val params = checkAndGetConfig(args, MigrateMain())
+    var params = checkAndGetConfig(args, MigrateMain())
+
+    if (params.cassandraContactPoints.isEmpty) {
+      params = params.copy(cassandraContactPoints = Seq("127.0.0.1:9042"))
+    }
 
     val env = params.environment match {
       case "development" => "dev"
@@ -84,8 +88,8 @@ object MigrateMain extends EntryPoint[MigrateMain] {
       .validate(environment => if (Seq("development", "production", "testing").contains(environment)) success else failure("undefined environment"))
       .text("...")
 
-    opt[Boolean]("force")
-      .action((force, config) => config.copy(force = force))
+    opt[Unit]("force")
+      .action((force, config) => config.copy(force = true))
       .text("...")
 
     opt[String]('l',"loglevel").optional()
@@ -116,6 +120,6 @@ object MigrateMain extends EntryPoint[MigrateMain] {
 
 }
 
-case class MigrateMain(cassandraContactPoints: Seq[String] = Seq("127.0.0.1:9042"), createKeyspace: Boolean = false, debug: Option[Boolean] = None,
+case class MigrateMain(cassandraContactPoints: Seq[String] = Seq(), createKeyspace: Boolean = false, debug: Option[Boolean] = None,
                        environment: String = "development", force: Boolean = false, isReset: Boolean = false, isRollback: Boolean = false,
                        logLevel: String = "INFO", rollbackSteps: Int = 1, sentryDns: Option[String] = None)

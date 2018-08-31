@@ -18,8 +18,9 @@
     "KAFKA_ADVERTISED_HOST_NAME": "_{HOSTNAME_COMMAND}",
     "HOSTNAME_COMMAND": "echo $HOST",
     "KAFKA_ZOOKEEPER_CONNECT": "$MESOS_HOST:2181/kafka",
-    "KAFKA_AUTO_CREATE_TOPICS_ENABLE": "false",
-    "JMX_PORT": "9093"
+    "KAFKA_AUTO_CREATE_TOPICS_ENABLE": "true",
+    "JMX_PORT": "9093",
+    "DELETE_TOPIC_ENABLE": "true"
   },
   "healthChecks": [
     {

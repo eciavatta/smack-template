@@ -1,0 +1,11 @@
+{
+  "type": "A",
+  "name": "$RECORD_NAME",
+  "data": "$RECORD_IP",
+  "priority": null,
+  "port": null,
+  "ttl": 1800,
+  "weight": null,
+  "flags": null,
+  "tag": null
+}

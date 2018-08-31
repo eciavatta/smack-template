@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [ -f smack-env.sh ]; then
+  source ./smack-env.sh
+fi
+
+$SPARK_HOME/bin/spark-submit                     \
+  --class smack.entrypoints.AnalysisMain         \
+  --master mesos://$MESOS_HOST:5050              \
+  --conf spark.mesos.executor.home=/opt/spark    \
+  $APP_PATH/smack-analysis-$VERSION.jar          \
+  "$@"
