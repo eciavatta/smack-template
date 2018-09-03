@@ -19,7 +19,7 @@ Usage: smack-client [options]
 Tool that can be used to stress test the smack system.
 ```
 
-Un esempio di script per lanciare il comando è disponibile qui: [run-client](/scripts/run-client)
+Un esempio di script per lanciare il comando è disponibile qui: [run-client](/scripts/run-client).
 
 ## Funzionamento
 All'avvio del client vengono creati un numero di attori pari al parametro _parallelism_. Ogni attore attore contiene una coda alla quale vengono inseriti

@@ -73,33 +73,40 @@ object MigrateMain extends EntryPoint[MigrateMain] {
     opt[String]('c', "cassandra-contact-points").optional().unbounded()
       .action((cassandra, config) => config.copy(cassandraContactPoints = config.cassandraContactPoints :+ cassandra))
       .validate(cassandra => addressPattern.findFirstIn(cassandra).fold(failure("invalid cassandra-contact-points address"))(_ => success))
-      .text("...")
+      .valueName("<addr>")
+      .text("The cassandra contact point/s (default: 127.0.0.1:9042)")
 
     opt[Unit]("create-keyspace").optional()
       .action((_, config) => config.copy(createKeyspace = true))
-      .text("...")
+      .text("Create keyspace before start with migration")
 
     opt[Boolean]('d', "debug").optional()
       .action((debug, config) => config.copy(debug = Some(debug)))
-      .text("...")
+      .valueName("<bool>")
+      .text("True if debug should be enabled")
 
     opt[String]('e', "environment").optional()
       .action((environment, config) => config.copy(environment = environment))
       .validate(environment => if (Seq("development", "production", "testing").contains(environment)) success else failure("undefined environment"))
-      .text("...")
+      .valueName("<env>")
+      .text("The environment to be used (default: development)")
 
     opt[Unit]("force")
-      .action((force, config) => config.copy(force = true))
-      .text("...")
+      .action((_, config) => config.copy(force = true))
+      .text("Must be set in production environments")
 
     opt[String]('l',"loglevel").optional()
       .action((level, config) => config.copy(logLevel = level))
       .validate(level => if (Seq("error", "warning", "info", "debug", "off").contains(level.toLowerCase)) success else failure("undefined loglevel"))
-      .text("...")
+      .valueName("<level>")
+      .text("The log level used by standard output and (optionally) by sentry logger (default: info)")
 
     opt[String]("sentry-dns").optional()
       .action((dns, config) => config.copy(sentryDns = Some(dns)))
-      .text("...")
+      .valueName("<key>")
+      .text("If defined, every logs are sent to sentry servers and can be viewed on Sentry.io. The standard output remain unchanged")
+
+    help("help").text("Display help")
 
     cmd("rollback")
       .action((_, c) => c.copy(isRollback = true))
@@ -107,15 +114,16 @@ object MigrateMain extends EntryPoint[MigrateMain] {
         opt[Int]("steps").optional()
           .action((steps, config) => config.copy(rollbackSteps = steps))
           .validate(steps => if (steps > 0) success else failure("steps must be greater than 0"))
-          .text("...")
+          .valueName("<num>")
+          .text("The number of steps to be rollbacked")
       )
-      .text("...")
+      .text("Execute a rollback of the database schema.")
 
     cmd("reset")
       .action((_, c) => c.copy(isReset = true))
-      .text("...")
+      .text("Reset the database schema and clean all tables.")
 
-    note("...")
+    note("Perform the migration of the database schema.")
   }
 
 }
