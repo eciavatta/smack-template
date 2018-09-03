@@ -1,5 +1,6 @@
 # Installazione Apache Mesos
-La configurazione riguarda due tipi di nodi: mesos-master e mesos-slave (o agent).
+La configurazione riguarda due tipi di nodi: mesos-master e mesos-slave (o agent). La documentazione ufficiale è disponibile sul sito
+[Apache Mesos](http://mesos.apache.org/).
 
 ## Prerequisiti
 Per fare riferimento a questa guida, in ogni nodo deve installata una distribuzione Ubuntu 16.04.
@@ -90,17 +91,55 @@ come argomento durante l'esecuzione del servizio, mentre il contenuto viene pass
 * `cluster`: il nome da utilizzare per il cluster.
 * `hostname`: il nome di dominio comunicato agli altri master. Se non viene specificato parametro `ip` o `advertise_ip`, il master deve essere raggiungibile
   dagli altri master attraverso questo valore. Di default viene utilizzato l'hostname del sistema.
-* `ip`: l'indirizzo ip che gli altri master devono utilizzare per comunicare e che viene utilizzato al posto di un nome di dominio. È ottenere l'indirizzo ip
-  del sistema sull'interfaccia `eth0` attraverso il comando `ifconfig eth0 | awk '/inet addr/{split($2,a,":"); print a[2]}'`.
+* `ip`: l'indirizzo ip che gli altri master devono utilizzare per comunicare e che viene utilizzato al posto dell'`hostname`. Per ottenere l'indirizzo ip del
+  sistema sull'interfaccia `eth0` utilizzare il comando `ifconfig eth0 | awk '/inet addr/{split($2,a,":"); print a[2]}'`.
 * `advertise_ip`: l'indirizzo ip che gli altri master devono utilizzare per comunicare se risolvendo l'`hostname` non è possibile raggiungere il master.
 
+Quando si installa mesos tramite repository Ubuntu come nel procedimento indicato sopra viene impostato l'avvio in automatico del servizio `mesos-slave`.
+Disabilitare questo servizio nei nodi master utilizzando i seguenti comandi.
+```bash
+service mesos-slave stop
+echo "manual" > /etc/init/mesos-slave.override
+```
 
+Occorre infine riavviare i servizi `zookeeper` e `mesos-master` dopo aver modificato la configurazione.
+```bash
+service zookeeper restart
+service mesos-master restart
+```
 
+Collegandosi all'indirizzo `http://master1.example.com:5050` è dispobile l'interfaccia utente di mesos master, come mostrata di seguito.
+
+![Interfaccia utente mesos master](https://i.imgur.com/O69r0S4.png)
 
 #### Mesos Agent
+Per connettersi ai nodi master gli agenti mesos devono conoscere gli indirizzi zookeeper dei master. È necessario modificare il file `/etc/mesos/zk` e inserire
+la stringa `zk://master1.example.com:2181/mesos` se si utilizza una configurazione con un solo nodo master, oppure
+`zk://master1.example.com:2181,master2.example.com:2181,master3.example.com:2181/mesos` se si utilizzano ad esempio 3 nodi master.
 
+La configurazione del servizio slave di mesos è presente nella directory `/etc/mesos-slave`. Il nome di ogni file creato in questa directory verrà passato
+come argomento durante l'esecuzione del servizio, mentre il contenuto viene passato come valore. È possibile vedere la lista degli argomenti disponibili sulla
+[documentazione](http://mesos.apache.org/documentation/latest/configuration/master/) sul sito di Apache Mesos. Di seguito sono elencati i parametri principali.
+* `work_dir`: il percorso della directory del master. Impostare `/var/lib/mesos`. Parametro  **obbligatorio**.
+* `hostname`: il nome di dominio comunicato al master e utilizzato dai task. Se non viene specificato parametro `ip` o `advertise_ip`, l'agente deve essere
+  raggiungibile dal master attraverso questo valore. Di default viene utilizzato l'hostname del sistema.
+* `ip`: l'indirizzo ip che il master deve utilizzare per comunicare e che viene utilizzato al posto dell'`hostname`. Per ottenere l'indirizzo ip del sistema
+  sull'interfaccia `eth0` utilizzare il comando `ifconfig eth0 | awk '/inet addr/{split($2,a,":"); print a[2]}'`.
+* `advertise_ip`: l'indirizzo ip che il master deve utilizzare per comunicare se risolvendo l'`hostname` non è possibile raggiungere l'agente.
 
+Quando si installa mesos tramite repository Ubuntu come nel procedimento indicato sopra viene impostato l'avvio in automatico dei servizi `zookeeper` e
+`mesos-master`. Disabilitare questi servizi nei nodi agent utilizzando i seguenti comandi.
+```bash
+service zookeeper stop
+echo "manual" > /etc/init/zookeeper.override
+service mesos-master stop
+echo "manual" > /etc/init/mesos-master.override
+```
 
+Occorre infine riavviare il servizio `mesos-slave` dopo aver modificato la configurazione.
+```bash
+service mesos-slave restart
+```
 
-
-
+## Conclusione
+Il cluster mesos è pronto per essere utilizzato. È ora possibile [installare il framework Marathon](docs/it/installazione_marathon.md) per la gestione dei task.
