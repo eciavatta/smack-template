@@ -7,7 +7,7 @@ Per fare riferimento a questa guida, in ogni nodo deve installata una distribuzi
 La maggior parte delle operazioni sono da effettuare con utente con privilegi root, si presuppone quindi che la shell sia avviata in modalità sudo.
 È consigliabile impostare l'hostname della macchina in modo che possa essere risolto da un server DNS esterno o utilizzando BIND in un nome di dominio valido
 e che l'indirizzo risolto possa essere raggiungibile dagli altri nodi del cluster.
-Per la configurazione del firewall è possibile vedere sotto quali porte è necessario lasciare aperte.
+Per la configurazione del firewall è possibile seguire la [guida dedicata](configurazione_firewall.md).
 
 ## Installazione
 
@@ -126,6 +126,8 @@ come argomento durante l'esecuzione del servizio, mentre il contenuto viene pass
 * `ip`: l'indirizzo ip che il master deve utilizzare per comunicare e che viene utilizzato al posto dell'`hostname`. Per ottenere l'indirizzo ip del sistema
   sull'interfaccia `eth0` utilizzare il comando `ifconfig eth0 | awk '/inet addr/{split($2,a,":"); print a[2]}'`.
 * `advertise_ip`: l'indirizzo ip che il master deve utilizzare per comunicare se risolvendo l'`hostname` non è possibile raggiungere l'agente.
+* `containerizers`: la tipologia di container che i task possono utilizzare. Inserire `docker,mesos` per utilizzare sia container nativi mesos sia container
+  docker.
 
 Quando si installa mesos tramite repository Ubuntu come nel procedimento indicato sopra viene impostato l'avvio in automatico dei servizi `zookeeper` e
 `mesos-master`. Disabilitare questi servizi nei nodi agent utilizzando i seguenti comandi.
@@ -142,4 +144,4 @@ service mesos-slave restart
 ```
 
 ## Conclusione
-Il cluster mesos è pronto per essere utilizzato. È ora possibile [installare il framework Marathon](docs/it/installazione_marathon.md) per la gestione dei task.
+Il cluster mesos è pronto per essere utilizzato. È ora possibile [installare il framework Marathon](installazione_marathon.md) per la gestione dei task.
