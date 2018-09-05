@@ -83,51 +83,62 @@ object Main extends EntryPoint[Main] {
     opt[String]('a', "akka-seeds").required().unbounded()
       .action((akka, config) => config.copy(akkaSeeds = config.akkaSeeds :+ akka))
       .validate(akka => addressPattern.findFirstIn(akka).fold(failure("invalid akka-seeds address"))(_ => success))
-      .text("...")
+      .valueName("<addr>")
+      .text("The akka seed node/s")
 
     opt[String]('c', "cassandra-contact-points").optional().unbounded()
       .action((cassandra, config) => config.copy(cassandraContactPoints = config.cassandraContactPoints :+ cassandra))
       .validate(cassandra => addressPattern.findFirstIn(cassandra).fold(failure("invalid cassandra-contact-points address"))(_ => success))
-      .text("...")
+      .valueName("<addr>")
+      .text("The cassandra contact point/s (default: 127.0.0.1:9042)")
 
     opt[String]("datadog-agent").optional()
       .action((agent, config) => config.copy(datadogAgent = agent, datadogAgentEnabled = true))
       .validate(agent => addressPattern.findFirstIn(agent).fold(failure("invalid datadog agent address"))(_ => success))
-      .text("...")
+      .valueName("<addr>")
+      .text("The address of the Datadog agent (default: 127.0.0.1:8126)")
 
     opt[String]("datadog-api").optional()
       .action((api, config) => config.copy(datadogApi = api, datadogApiEnabled = true))
-      .text("...")
+      .valueName("<key>")
+      .text("The Datadog api key")
 
     opt[Boolean]('d', "debug").optional()
       .action((debug, config) => config.copy(debug = Some(debug)))
-      .text("...")
+      .valueName("<bool>")
+      .text("True if debug should be enabled")
 
     opt[String]('e', "environment").optional()
       .action((environment, config) => config.copy(environment = environment))
       .validate(environment => if (Seq("development", "production", "testing").contains(environment)) success else failure("undefined environment"))
-      .text("...")
+      .valueName("<env>")
+      .text("The environment to be used (default: development)")
 
     opt[String]('k', "kafka-bootstraps").optional().unbounded()
       .action((kafka, config) => config.copy(kafkaBootstrapServers = config.kafkaBootstrapServers :+ kafka))
       .validate(kafka => addressPattern.findFirstIn(kafka).fold(failure("invalid kafka-bootstraps address"))(_ => success))
-      .text("...")
+      .valueName("<addr>")
+      .text("The kafka bootstrap server/s (default: 127.0.0.1:9092)")
 
     opt[String]('l',"loglevel").optional()
       .action((level, config) => config.copy(logLevel = level))
       .validate(level => if (Seq("error", "warning", "info", "debug", "off").contains(level.toLowerCase)) success else failure("undefined loglevel"))
-      .text("...")
+      .valueName("<level>")
+      .text("The log level used by standard output and (optionally) by sentry logger (default: info)")
 
     opt[String]("sentry-dns").optional()
       .action((dns, config) => config.copy(sentryDns = Some(dns)))
-      .text("...")
+      .valueName("<key>")
+      .text("If defined, every logs are sent to sentry servers and can be viewed on Sentry.io. The standard output remain unchanged")
 
     arg[String]("<role>").required()
       .action((role, config) => config.copy(role = role))
       .validate(role => if (configRoles.contains(role)) success else failure("undefined role"))
-      .text("...")
+      .text("The role of the instance to start")
 
-    note("...")
+    help("help").text("Display help")
+
+    note("Run the instance specified by role and connect to the cluster.")
   }
 
 }
