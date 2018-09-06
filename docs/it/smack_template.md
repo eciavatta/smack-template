@@ -90,10 +90,33 @@ compito di trasformare le richieste (inviate originalmente dal frontend sotto fo
 `ResponseStatus` che contiene il codice HTTP della risposta, un messaggio opzionale e lo stack trace in caso di eccezione. All'interno del trait `Controller`
 sono già disponibili dei metodi per la creazione di rispose di default, come `success()`, `created()`, `accepted()`, `notFound()`, `badRequest(message)`,
 `serviceUnavailable()`, `internalServerError(throwable, message)`. In caso di eccezione è fornito il metodo `responseRecovery(throwable): Option[ResponseStatus]`
-per la creazione dell'oggetto `ResponseStatus` dal tipo di eccezione.
+per la creazione dell'oggetto `ResponseStatus` dal tipo di eccezione. Un esempio di controller che estende il `KafkaController` è il
+[LogController](/src/main/scala/smack/backend/controllers/LogController.scala), mentre un controller che estende il `CassandraController` è
+[UserController](/src/main/scala/smack/backend/controllers/UserController.scala).
 
 ### Frontend
-Nel frontend sono contenuti un insieme di percorsi (routes) che servono per definire l'interfaccia delle API REST. 
+Nel frontend sono contenuti un insieme di percorsi (routes) che servono per definire l'interfaccia delle API REST. I percorsi devono essere contentuti
+all'interno del package [routes](/src/main/scala/smack/frontend/routes). Ogni route deve estendere la classe `RestRoute`, che richiede di definire il
+router backend e la configurazione dell'attore di sistema. Inoltre contiene il metodo `handle` che facilita l'invio delle richieste al backend e gestisce
+le risposte inoltrandole al client. Le richieste inviate al backend devono essere messaggi serializzabili, come spiegato nel paragrafo Backend. Con il client
+invece il frontend può scambiare oggetti in formato JSON. È quindi necessario implementare per ogni classe che deve essere convertita in JSON un apposito
+convertitore implicito che è possibile inserire nel package [marshallers](/commons/src/main/scala/smack/commons/mashallers) nel modulo commons.
+Per la documentazione della (de)serializzazione in JSON si può fare riferimento alla libreria che se ne occupa, ovvero
+[spray-json](https://github.com/spray/spray-json). Ogni route deve inoltre implementare il metodo `route: Route` definisce il percorso stesso; deve essere
+una direttiva che segue le regole e la sinstassi della libreria che le implementa, ovvero [Akka Http](https://doc.akka.io/docs/akka-http/current/index.html).
+Si rimanda alla documentazione sulle [Directives](https://doc.akka.io/docs/akka-http/current/routing-dsl/directives/index.html).
 
+Prima di essere inoltrate al backend le richieste possono essere validate. In particolare è implementata un sistema di validazione che controlla se i campi
+degli oggetti JSON inviati dal client, e quindi trasformati in oggetti Java, soddisfano determinati criteri. È possibile inserire nuove regole all'interno
+del package [validation](/src/main/scala/smack/frontend/validation). Ogni regola di validazione deve essere un oggetto che implementa il metodo `apply`, che
+ha come parametri il nome del campo dell'oggetto da validare (`fieldName: String`) e opzionalmente altri parametri. Il metodo deve restituire un oggetto
+`FieldRule`, al cui interno è contenuta la funzione che viene utilizzata per la validazione del campo e il messaggio di errore da ritornare al client in caso
+di fallimento della validazione. È possibile trovare esempi di regole di validazione all'interno di
+[ValidationRules](/src/main/scala/smack/frontend/validation/ValidationRules.scala). Un esempio completo che mostra la validazione del modello e
+l'implementazione di alcune route è possibile trovarlo in [UserRoute](/src/main/scala/smack/frontend/routes/UserRoute.scala).
 
 ### Service
+Service è un insieme di servizi che sono monitorati da un supervisore. Ogni servizio può essere implementato utilizzando un attore e inserito nel package
+[services](/src/main/scala/smack/backend/services). L'attore del servizio deve essere creato all'interno del
+[ServiceSupervisor](/src/main/scala/smack/backend/ServiceSupervisor.scala). Un esempio di servizio è disponibile in
+[LogService](/src/main/scala/smack/backend/services/LogService.scala).
