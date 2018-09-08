@@ -1,4 +1,4 @@
-# Dispiegamento Cluster
+# Dispiegamento cluster
 Per lanciare l'applicazione è necessario avere a disposizione un insieme di nodi che devono formare un cluster Mesos.
 
 ## Prerequisiti
@@ -13,11 +13,13 @@ Negli scripts allegati è presente un semplice tool per la creazione di droplet 
 - `./droplets-compose up <num>` per la creazione di `num` droplet
 - `./droplets-compose down <num>` per la distruzione di `num` droplet
 
-A ciascuna droplet verrà assegnato il nome `mesos-agent$index`, con `$index` che va da 1 a `num`. I nodi `mesos-master` devono essere creati in precedenza
-manualmente. Ad ogni droplet viene associato un record di dominio che ha nome uguale a `mesos-agent$index.do.example.com`. È possibile modificare le opzioni
-del droplet e del record di dominio da creare rispettivamente nei file [create-droplet.json.template](/scripts/digitalocean/create-droplet.json.template)
-e [create-domain-record.json.template](/scripts/digitalocean/create-domain-record.json.template). Per funzionare è necessario modificare le seguenti
-variabili d'ambiente all'interno del file [smack-env.sh](/scripts/smack-env.sh):
+A ciascuna istanza verrà assegnato il nome `mesos-agent$index`, con `$index` che va da 1 a `num`.
+I nodi `mesos-master` devono essere creati in precedenza manualmente.
+Ad ogni droplet viene associato un record di dominio che ha nome uguale a `mesos-agent$index.do.example.com`.
+È possibile modificare le opzioni del droplet e del record di dominio da creare rispettivamente nei file
+[create-droplet.json.template](/scripts/digitalocean/create-droplet.json.template)
+e [create-domain-record.json.template](/scripts/digitalocean/create-domain-record.json.template).
+Per eseguire lo script è necessario prima modificare le seguenti variabili d'ambiente all'interno del file [smack-env.sh](/scripts/smack-env.sh).
 ```bash
 # Il token fornito da DigitalOcean per l'autenticazione
 DO_TOKEN=""
@@ -37,10 +39,11 @@ DO_DOMAIN="do.example.com"
 
 ## Formazione del cluster
 Dopo aver configurato tutti i nodi e avendo a disposizione risorse Mesos è possibile lanciare task su Marathon attraverso degli oggetti JSON.
-Gli oggetti per questa applicazione e per le sue dipendenze sono disponibili nella directory [marathon](/marathon). Sono disponibili anche tre script per la
-formazione automatica del cluster, e sono [cluster-init-compose](/scripts/cluster-init-compose), [cluster-smack-compose](/scripts/cluster-smack-compose)
-e [cluster-full-compose](/scripts/cluster-full-compose). Ciascuno script contiene due sotto-comandi, `up` utilizzabile per la formazione del cluster e
-`down` per la sua distruzione.
+Gli oggetti per questa applicazione e per le sue dipendenze sono disponibili nella directory [marathon](/marathon).
+Sono disponibili anche tre script per la formazione automatica del cluster,
+e sono [cluster-init-compose](/scripts/cluster-init-compose), [cluster-smack-compose](/scripts/cluster-smack-compose)
+e [cluster-full-compose](/scripts/cluster-full-compose).
+Ciascuno script contiene due sotto-comandi, `up` utilizzabile per la formazione del cluster e `down` per la sua distruzione.
 Di default, `cluster-init-compose` si occupa di:
 - Generare il cluster id, che viene utilizzato nel nome del cluster Cassandra (`cassandra_$id`) e come percorso Zookeeper di Kafka (`kafka_$id`)
 - Lanciare una istanza `kafka-seed` che si occupa della formazione e del congiungimento di broker Kafka  
@@ -60,10 +63,10 @@ Lo script `cluster-full-compose` non fa altro che eseguire `cluster-init-compose
 
 È possibile modificare i parametri di questi script modificando le variabili d'ambiante contenute all'interno del file [smack-env.sh](/scripts/smack-env.sh).
 ```bash
-# L'indirzzo del master di Mesos dove è presente anche il servizio Zookeeper
+# L'indirizzo del master di Mesos dove è presente anche il servizio Zookeeper
 MESOS_HOST=127.0.0.1
 
-# La chiave privata di Sentry si vogliono inviare i log dell'applicazione a questo servizio
+# La chiave privata di Sentry se si vogliono inviare i log dell'applicazione a questo servizio
 SENTRY_DNS=""
 
 # Il percorso locale dove sono contenuti i pacchetti in formato jar dell'applicazione

@@ -1,12 +1,12 @@
 # Installazione Marathon
-Marathon è un framework di Mesos mantenuto da Mesosphere. La documentazione ufficiale è disponibile sul sito
-[Mesosphere Marathon](https://mesosphere.github.io/marathon/).
+Marathon è un framework di Mesos mantenuto da Mesosphere.
+La documentazione ufficiale è disponibile sul sito [Mesosphere Marathon](https://mesosphere.github.io/marathon/).
 
 ## Prerequisiti
-Per fare riferimento a questa guida, in ogni nodo slave deve installata una distribuzione Ubuntu 16.04 e deve essere installato il servizio `mesos-slave` come
-indicato nella guida [Installazione Apache Mesos](installazione_mesos.md).
+Per fare riferimento a questa guida, in ogni nodo master deve installata una distribuzione Ubuntu 16.04 
+e deve essere installato il servizio `mesos-master` come indicato nella guida [Installazione Apache Mesos](installazione_mesos.md).
 La maggior parte delle operazioni sono da effettuare con utente con privilegi root, si presuppone quindi che la shell sia avviata in modalità sudo.
-Per la configurazione del firewall è possibile seguire la [guida dedicata](configurazione_firewall.md).
+Per la configurazione del firewall è disponibile la [lista delle porte utilizzate](configurazione_firewall.md).
 
 ## Installazione
 Ci sono due modi per installare Marathon: scaricandolo dal [sito ufficiale](https://mesosphere.github.io/marathon/) o installandolo da repository Ubuntu.
@@ -28,15 +28,16 @@ Per installare Marathon eseguire:
 apt-get install -y marathon
 ```
 
-La configurazione di Marathon è contenuta nella directory `/etc/marathon/conf`. Il nome di ogni file creato in questa directory verrà passato come argomento
-durante l'esecuzione del servizio, mentre il contenuto viene passato come valore. Di seguito sono elencati soltanto i parametri obbligatori, tutte le possibili
-opzioni sono disponibili nella documentazione ufficiale nella sezione [Command line flags](https://mesosphere.github.io/marathon/docs/command-line-flags.html).
-* `hostname`: il nome di dominio comunicato a Mesos e agli altri servizi Marathon. Se non specificato viene utilizzato l'hostname del sistema.
-* `master`: l'indirizzo zookeeper del master di mesos in una configurazione con singolo master (`zk://master1.example.com:2181/mesos`) o gli indirizzi
-  zookeeper dei master di mesos in una configurazione con master multipli
+La configurazione di Marathon è contenuta nella directory `/etc/marathon/conf`.
+Il nome di ogni file creato in questa directory verrà passato come argomento durante l'esecuzione del servizio, mentre il contenuto verrà passato come valore.
+Di seguito sono elencati soltanto i parametri obbligatori, tutte le possibili opzioni sono disponibili nella documentazione ufficiale nella sezione
+[Command line flags](https://mesosphere.github.io/marathon/docs/command-line-flags.html).
+* `hostname`: il nome di dominio comunicato a Mesos e alle altre istanze Marathon. Se non specificato viene utilizzato l'hostname del sistema.
+* `master`: l'indirizzo Zookeeper del master di Mesos in una configurazione con singolo master (`zk://master1.example.com:2181/mesos`)
+  o gli indirizzi Zookeeper dei master di Mesos in una configurazione con master multipli
   (`zk://master1.example.com:2181,master2.example.com:2181,master3.example.com:2181/mesos`).
-* `zk`: l'indirizzo zookeeper di tutti i nodi dove è eseguito il servizio marathon. In una configurazione con singolo master indicare
-  `zk://master1.example.com:2181/marathon` mentre in una configurazione com master multipli indicare
+* `zk`: l'indirizzo Zookeeper di tutti i nodi dove è eseguito il servizio Marathon. In una configurazione con singolo master indicare
+  `zk://master1.example.com:2181/marathon`, mentre in una configurazione con master multipli indicare
   `zk://master1.example.com:2181,master2.example.com:2181,master3.example.com:2181/marathon`.
 
 Per applicare la configurazione occorre riavviare il servizio `marathon`.

@@ -1,4 +1,4 @@
-## Configurazione filewall
+## Configurazione firewall
 
 Nella tabella di seguito sono elencate tutte le porte utilizzate dall'intero sistema.
 

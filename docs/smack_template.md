@@ -23,100 +23,117 @@ Run the instance specified by role and connect to the cluster.
 ```
 
 ## Funzionamento
-L'applicazione è composta da quattro parti (o ruoli), *backend*, *frontend*, *service* e *seed*. Ciascun ruolo contribuisce a una parte del sistema e per
-funzionare l'applicazione ha bisogno almeno un'instanza di tutti i ruoli. Ogni ruolo è indipendente dagli altri e non è necessaria una relazione 1:1 fra le
-istanze. È quindi possibile ad esempio scalare soltanto la parte dell'applicazione che è soggetta a maggior carico. Di seguito è spiegato in dettaglio il
-funzionamento di ogni ruolo.
+L'applicazione è composta da quattro parti (o ruoli), *backend*, *frontend*, *service* e *seed*.
+Ciascun ruolo contribuisce ad una parte del sistema e per funzionare l'applicazione ha bisogno almeno un'istanza di tutti i ruoli.
+Ogni ruolo è indipendente dagli altri e non è necessaria una relazione 1:1 fra le istanze.
+È quindi possibile ad esempio scalare soltanto la parte dell'applicazione che è soggetta a maggior carico.
+Di seguito è spiegato in dettaglio il funzionamento di ogni ruolo.
 
 ### Backend
-È il ruolo che si occupa di raccogliere le richieste degli utenti inviate al Frontend e trasformarle in risposte. Le richieste ricevute vengono inviate dal
-frontend sotto forma di messaggi che contengono il tipo di azione da compiere e il contenuto della richiesta. Il backend è dotato di un supervisore che
-intercetta il tipo di azione da eseguire riconoscendo la classe dell'oggetto che contiene il messaggio, e lo inoltra al controllore che deve gestire quel tipo
-di azione. Il controllore ha il compito di verificare innanzitutto se la richiesta è valida; in caso contrario un messaggio di errore deve inviato al frontend
-che si occupa di rispondere al client che ha effettuato la richiesta. Per le richieste valide, il controllore può scegliere fra le seguenti opzioni:
-- Gestire localmente la richiesta ed effettuare la computazione necessaria, rispondendo immediatamente al frontend con i risultati
-- Inviare un nuovo evento ad un broker Kafka se non è necessario processare la richiesta subito e notificare il frontend della presa in carico
-- Salvare in modo permanente i dati ricevuti nel cluster Cassandra e fornire al frontend i riferimenti della transazione
+È il ruolo che si occupa di raccogliere le richieste degli utenti inviate al frontend e trasformarle in risposte.
+Le richieste ricevute vengono inviate dal frontend sotto forma di messaggi che contengono il tipo di azione da compiere e il contenuto della richiesta.
+Il backend è dotato di un supervisore che intercetta il tipo di azione da eseguire riconoscendo la classe dell'oggetto che contiene il messaggio,
+e lo inoltra al controllore che deve gestire quel tipo di azione.
+Il controllore ha il compito di verificare innanzitutto se la richiesta è valida;
+in caso contrario un messaggio di errore deve inviato al frontend che si occupa di rispondere al client che ha effettuato la richiesta.
+Per le richieste valide, il controllore può scegliere fra le seguenti opzioni:
+* Gestire localmente la richiesta ed effettuare la computazione necessaria, rispondendo immediatamente al frontend con i risultati
+* Inviare un nuovo evento ad un broker Kafka se non è necessario processare la richiesta subito e notificare il frontend della presa in carico
+* Salvare in modo permanente i dati ricevuti nel cluster Cassandra e fornire al frontend i riferimenti della transazione
 
-In caso di errore all'interno del controllore, il frontend viene avvisato del problema e il controllore viene riavviato. Le connessioni con i broker Kafka e
-con i nodi Cassandra vengono quindi ristabilite.
+In caso di errore all'interno del controllore, il frontend viene avvisato del problema e il controllore viene riavviato.
+Le connessioni con i broker Kafka e con i nodi Cassandra vengono quindi ristabilite.
 
 ### Frontend
-Avvia un'istanza di un web server che si occupa di raccogliere le richieste dei client e di fornire loro una risposta. Il web server può essere esposto
-direttamente all'esterno del cluster o può essere collegato ad un load balancer hardware o software tipo [HAProxy](http://www.haproxy.org/).
-Il frontend non gestisce direttamente le richieste ma le inoltra al backend. Se all'interno del cluster sono disponibili più backend, la richiesta viene
-inviata al nodo che ha meno carico di lavoro, in modo da ridurre i tempi di processamento. Il web server può gestire più richieste concorrentemente. È stata
-utilizzata l'architettura REST per implementare l'interazione dell'applicazione con gli utenti. Ogni risorsa deve essere dichiarare un percorso (route) e una
-funzione che costruisce il messaggio con la richiesta da inviare al backend. Alla ricezione di una richiesta, il web server seleziona la route corrispondente
-per la risorsa voluta: se esiste la richiesta viene processata, altrimenti viene generata una risposta di errore. Se non ci sono backend attivi, ci sono
-ma sono congestionati o il backend si interrompe per un'eccezione non prevista, viene generata una risposta di errore. Se il frontend viene avviato in modalità
-debug i dettagli dell'errore sono mostrati all'interno dell'oggetto JSON di risposta. All'interno del frontend è implementata una semplice validazione delle
-richieste prima che esse vengano inoltrate al backend, in modo tale da scartare immediatamente le richieste non valide.
+Avvia un'istanza di un web server che si occupa di raccogliere le richieste dei client e di fornire loro una risposta.
+Il web server può essere esposto direttamente all'esterno del cluster o può essere collegato ad un load balancer hardware
+o software tipo [HAProxy](http://www.haproxy.org/).
+Il frontend non gestisce direttamente le richieste ma le inoltra al backend. Se all'interno del cluster sono disponibili più backend,
+la richiesta viene inviata al nodo che ha meno carico di lavoro, in modo da ridurre i tempi di processamento.
+Il web server può gestire più richieste concorrentemente. È stata utilizzata l'architettura REST per implementare l'interazione dell'applicazione con gli utenti.
+Ogni risorsa deve essere dichiarare un percorso (route) e una funzione che costruisce il messaggio con la richiesta da inviare al backend.
+Alla ricezione di una richiesta, il web server seleziona la route corrispondente per la risorsa voluta: se esiste la richiesta viene processata,
+altrimenti viene generata una risposta di errore.
+Se non ci sono backend attivi, ci sono ma sono congestionati o il backend si interrompe per un'eccezione non prevista, viene generata una risposta di errore.
+Se il frontend viene avviato in modalità debug i dettagli dell'errore sono mostrati all'interno dell'oggetto JSON di risposta.
+All'interno del frontend è implementata una semplice validazione delle richieste prima che esse vengano inoltrate al backend,
+in modo tale da scartare immediatamente le richieste non valide.
 
 ### Service
-È il servizio che si occupa di processare le richieste che non vengono immediatamente processate dal backend. Serve ad esempio per consumare eventi dai broker
-Kafka, processarli e salvarli in modo permanente nel cluster Cassandra. Il ruolo service è dotato di un supervisore che si occupa di monitorare lo stato
-dei servizi attivi. Quando in un servizio succede un errore imprevisto, il supervisore ha il compito di riavviare il servizio e di ristabilire
-le connessioni con i servizi esterni.
+È il servizio che si occupa di processare le richieste che non vengono immediatamente processate dal backend.
+Serve ad esempio per consumare eventi dai broker Kafka, processarli e salvarli in modo permanente nel cluster Cassandra.
+Il ruolo service è dotato di un supervisore che si occupa di monitorare lo stato dei servizi attivi.
+Quando in un servizio succede un errore imprevisto, il supervisore ha il compito di riavviare il servizio e di ristabilire le connessioni con i servizi esterni.
 
 ### Seed
-È il ruolo che si occupa di congiungere i nuovi nodi con i nodi già esistenti che formano il cluster. Ogni nodo del cluster, all'avvio, deve specificare
-l'indirizzo di un seed. È possibile utilizzare il ruolo seed per effettuare questa operazione. Il primo nodo seed avviato all'interno di un nuovo cluster
-deve fare congiungimento con se stesso, quindi deve utilizzare come parametro `akka-seeds` il proprio indirizzo o il proprio nome di dominio.
+È il ruolo che si occupa di congiungere i nuovi nodi con i nodi già esistenti che formano il cluster.
+Ogni nodo del cluster, all'avvio, deve specificare l'indirizzo di un seed.
+È possibile utilizzare il ruolo seed per effettuare questa operazione.
+Il primo nodo seed avviato all'interno di un nuovo cluster deve fare congiungimento con sé stesso,
+quindi deve utilizzare come parametro `akka-seeds` il proprio indirizzo o il proprio nome di dominio.
 
-## Estensione
+## Struttura
 
 ### Backend
-Il backend ha il compito di processare i messaggi inviati dal backend. I messaggi vengono scambiati via rete e devono essere serializzati. Per la
-serializzazione degli oggetti è usata la libreria [Protocol Buffers](https://developers.google.com/protocol-buffers/) sviluppata da Google. Le definizioni
-dei messaggi possoni essere inseriti dentro il file [messages.proto](/commons/src/main/protobuf/messages.proto) all'interno del modulo commons, mentre le
-definizioni delle strutture possono essere inseriti dentro il file [structures.proto](/commons/src/main/protobuf/structures.proto). Le classi definite
-vengono autogenerate al momento della compilazione. Per serializzare e deserializzare oggetti correttamente è necessario definire un manifesto per ogni
-classe, da definire rispettivamente dentro la classe [MessageSerializer](/commons/src/main/scala/smack/commons/serialization/MessageSerializer.scala) e
-[StructureSerializer](/commons/src/main/scala/smack/commons/serialization/StructureSerializer.scala), sempre dentro il modulo commons.
+Il backend ha il compito di processare i messaggi inviati dal frontend. I messaggi vengono scambiati via rete e devono essere serializzabili.
+Per la serializzazione degli oggetti è usata la libreria [Protocol Buffers](https://developers.google.com/protocol-buffers/) sviluppata da Google.
+Le definizioni dei messaggi possono essere inserite dentro il file [messages.proto](/commons/src/main/protobuf/messages.proto) all'interno del modulo commons,
+mentre le definizioni delle strutture possono essere inserite dentro il file [structures.proto](/commons/src/main/protobuf/structures.proto).
+Le classi definite vengono autogenerate al momento della compilazione.
+Per serializzare e deserializzare oggetti correttamente è necessario creare un manifesto per ogni classe,
+da definire rispettivamente dentro la classe [MessageSerializer](/commons/src/main/scala/smack/commons/serialization/MessageSerializer.scala)
+e [StructureSerializer](/commons/src/main/scala/smack/commons/serialization/StructureSerializer.scala), sempre dentro il modulo commons.
 Infine occorre dichiarare dentro il file di configurazione [serialization.conf](/commons/src/main/resources/serialization.conf) chi si occupa di serializzare
-e deserializzare una determinata classe. Per la documentazione e la sintassi da utilizzare per la definizione di classi serializzabili si rimanda a
+e deserializzare una determinata classe.
+Per la documentazione e la sintassi da utilizzare per la definizione di classi serializzabili si rimanda a
 [Language Guide](https://developers.google.com/protocol-buffers/docs/proto3).
 
-Definiti i messaggi è possibile creare un nuovo controllore estendendo l'interfaccia base `Controller`. Se il controllore necessita di interagire con i broker
-Kafka, è disponibile l'estensione `KafkaController` dove è contenuto il metodo `sendToKafka(message: AnyRef): Future[Done]` utilizzabile per inviare eventi
-alle partizioni Kafka di un determinato topic, definito da `kafkaTopic`. Per salvare permanentemente dati o per selezionarli è possibile estendere il trait
-`CassandraController` che contiene il metodo `executeQuery(cassandraMessage: CassandraMessage): Future[ResultSet]` per eseguire query e per ottenere
-risultati.
+Definiti i messaggi è possibile creare un nuovo controllore estendendo l'interfaccia base `Controller`.
+Se il controllore necessita di interagire con i broker Kafka, è disponibile l'estensione `KafkaController` dove è contenuto il metodo
+`sendToKafka(message: AnyRef): Future[Done]` utilizzabile per inviare eventi alle partizioni Kafka di un determinato topic, definito da `kafkaTopic`.
+Per salvare permanentemente dati o per selezionarli è possibile estendere il trait `CassandraController` che contiene il metodo
+`executeQuery(cassandraMessage: CassandraMessage): Future[ResultSet]` per eseguire query e per ottenere risultati.
 
-Il controllore deve essere un attore che deve essere creato nel [BackendSupervisor](/src/main/scala/smack/backend/BackendSupervisor.scala). Sempre nel
-supervisore occorre dichiarare che i messaggi relativi al controllore che si è creato devono essere inoltrati al controllore stesso. Il controllore ha il
-compito di trasformare le richieste (inviate originalmente dal frontend sotto forma di messaggi) in risposte. Ogni risposta deve incapsulare l'oggetto
-`ResponseStatus` che contiene il codice HTTP della risposta, un messaggio opzionale e lo stack trace in caso di eccezione. All'interno del trait `Controller`
-sono già disponibili dei metodi per la creazione di rispose di default, come `success()`, `created()`, `accepted()`, `notFound()`, `badRequest(message)`,
-`serviceUnavailable()`, `internalServerError(throwable, message)`. In caso di eccezione è fornito il metodo `responseRecovery(throwable): Option[ResponseStatus]`
-per la creazione dell'oggetto `ResponseStatus` dal tipo di eccezione. Un esempio di controller che estende il `KafkaController` è il
-[LogController](/src/main/scala/smack/backend/controllers/LogController.scala), mentre un controller che estende il `CassandraController` è
-[UserController](/src/main/scala/smack/backend/controllers/UserController.scala).
+Il controllore deve essere un attore che deve essere creato nel [BackendSupervisor](/src/main/scala/smack/backend/BackendSupervisor.scala).
+Sempre nel supervisore occorre dichiarare che i messaggi relativi al controllore che si è creato devono essere inoltrati al controllore stesso.
+Il controllore ha il compito di trasformare le richieste (inviate originalmente dal frontend sotto forma di messaggi) in risposte.
+Ogni risposta deve incapsulare l'oggetto `ResponseStatus` che contiene il codice HTTP della risposta,
+un messaggio opzionale e lo stack trace in caso di eccezione.
+All'interno del trait `Controller` sono già disponibili dei metodi per la creazione di risposte di default,
+come `success()`, `created()`, `accepted()`, `notFound()`, `badRequest(message)`, `serviceUnavailable()`, `internalServerError(throwable, message)`.
+In caso di eccezione è fornito il metodo `responseRecovery(throwable): Option[ResponseStatus]` per la creazione dell'oggetto `ResponseStatus` dal tipo di
+eccezione. Un esempio di controller che estende `KafkaController` è [LogController](/src/main/scala/smack/backend/controllers/LogController.scala),
+mentre un controller che estende `CassandraController` è [UserController](/src/main/scala/smack/backend/controllers/UserController.scala).
 
 ### Frontend
-Nel frontend sono contenuti un insieme di percorsi (routes) che servono per definire l'interfaccia delle API REST. I percorsi devono essere contentuti
-all'interno del package [routes](/src/main/scala/smack/frontend/routes). Ogni route deve estendere la classe `RestRoute`, che richiede di definire il
-router backend e la configurazione dell'attore di sistema. Inoltre contiene il metodo `handle` che facilita l'invio delle richieste al backend e gestisce
-le risposte inoltrandole al client. Le richieste inviate al backend devono essere messaggi serializzabili, come spiegato nel paragrafo Backend. Con il client
-invece il frontend può scambiare oggetti in formato JSON. È quindi necessario implementare per ogni classe che deve essere convertita in JSON un apposito
-convertitore implicito che è possibile inserire nel package [marshallers](/commons/src/main/scala/smack/commons/mashallers) nel modulo commons.
-Per la documentazione della (de)serializzazione in JSON si può fare riferimento alla libreria che se ne occupa, ovvero
-[spray-json](https://github.com/spray/spray-json). Ogni route deve inoltre implementare il metodo `route: Route` definisce il percorso stesso; deve essere
-una direttiva che segue le regole e la sinstassi della libreria che le implementa, ovvero [Akka Http](https://doc.akka.io/docs/akka-http/current/index.html).
+Nel frontend sono contenuti un insieme di percorsi (routes) che servono per definire l'interfaccia delle API REST.
+I percorsi devono essere contenuti all'interno del package [routes](/src/main/scala/smack/frontend/routes).
+Ogni route deve estendere la classe `RestRoute` che richiede di definire il router backend e la configurazione dell'attore di sistema.
+Inoltre contiene il metodo `handle` che facilita l'invio delle richieste al backend e gestisce le risposte inoltrandole al client.
+Le richieste inviate al backend devono essere messaggi serializzabili, come spiegato nel paragrafo del backend.
+Con il client invece il frontend può scambiare oggetti in formato JSON.
+È quindi necessario implementare per ogni classe che deve essere convertita in JSON un apposito convertitore implicito che è possibile inserire nel package
+[marshallers](/commons/src/main/scala/smack/commons/mashallers) nel modulo commons.
+Per la documentazione sulla (de)serializzazione in JSON si può fare riferimento alla libreria che se ne occupa,
+ovvero [spray-json](https://github.com/spray/spray-json).
+Ogni route deve inoltre implementare il metodo `route: Route` che definisce il percorso stesso;
+deve essere una direttiva che segue le regole e la sinstassi della libreria che le implementa,
+ovvero [Akka Http](https://doc.akka.io/docs/akka-http/current/index.html).
 Si rimanda alla documentazione sulle [Directives](https://doc.akka.io/docs/akka-http/current/routing-dsl/directives/index.html).
 
-Prima di essere inoltrate al backend le richieste possono essere validate. In particolare è implementata un sistema di validazione che controlla se i campi
-degli oggetti JSON inviati dal client, e quindi trasformati in oggetti Java, soddisfano determinati criteri. È possibile inserire nuove regole all'interno
-del package [validation](/src/main/scala/smack/frontend/validation). Ogni regola di validazione deve essere un oggetto che implementa il metodo `apply`, che
-ha come parametri il nome del campo dell'oggetto da validare (`fieldName: String`) e opzionalmente altri parametri. Il metodo deve restituire un oggetto
-`FieldRule`, al cui interno è contenuta la funzione che viene utilizzata per la validazione del campo e il messaggio di errore da ritornare al client in caso
-di fallimento della validazione. È possibile trovare esempi di regole di validazione all'interno di
-[ValidationRules](/src/main/scala/smack/frontend/validation/ValidationRules.scala). Un esempio completo che mostra la validazione del modello e
-l'implementazione di alcune route è possibile trovarlo in [UserRoute](/src/main/scala/smack/frontend/routes/UserRoute.scala).
+Prima di essere inoltrate al backend le richieste possono essere validate.
+In particolare è implementato un sistema di validazione che controlla se i campi degli oggetti JSON inviati dal client, e quindi trasformati in oggetti Java,
+soddisfano determinati criteri. È possibile inserire nuove regole all'interno del package [validation](/src/main/scala/smack/frontend/validation).
+Ogni regola di validazione deve essere un oggetto che implementa il metodo `apply`,
+che ha come parametri il nome del campo dell'oggetto da validare (`fieldName: String`) e opzionalmente altri parametri.
+Il metodo deve restituire un oggetto `FieldRule`, al cui interno è contenuta la funzione che viene utilizzata per la validazione del campo
+e il messaggio di errore da ritornare al client in caso di fallimento della validazione.
+È possibile trovare esempi di regole di validazione all'interno di [ValidationRules](/src/main/scala/smack/frontend/validation/ValidationRules.scala).
+Un esempio completo che mostra la validazione del modello e l'implementazione di alcune route è possibile trovarlo in
+[UserRoute](/src/main/scala/smack/frontend/routes/UserRoute.scala).
 
 ### Service
-Service è un insieme di servizi che sono monitorati da un supervisore. Ogni servizio può essere implementato utilizzando un attore e inserito nel package
-[services](/src/main/scala/smack/backend/services). L'attore del servizio deve essere creato all'interno del
-[ServiceSupervisor](/src/main/scala/smack/backend/ServiceSupervisor.scala). Un esempio di servizio è disponibile in
-[LogService](/src/main/scala/smack/backend/services/LogService.scala).
+Service è un insieme di servizi che sono monitorati da un supervisore.
+Ogni servizio può essere implementato utilizzando un attore e inserito nel package [services](/src/main/scala/smack/backend/services).
+L'attore del servizio deve essere creato all'interno del [ServiceSupervisor](/src/main/scala/smack/backend/ServiceSupervisor.scala).
+Un esempio di servizio è disponibile in [LogService](/src/main/scala/smack/backend/services/LogService.scala).
