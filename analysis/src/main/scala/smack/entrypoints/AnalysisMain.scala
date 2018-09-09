@@ -43,22 +43,28 @@ object AnalysisMain {
     opt[String]('c', "cassandra-bootstrap").required()
       .action((cassandra, config) => config.copy(cassandra = cassandra))
       .validate(cassandra => addressPattern.findFirstIn(cassandra).fold(failure("invalid cassandra address"))(_ => success))
-      .text("...")
+      .valueName("<addr>")
+      .text("The cassandra contact point/s (default: 127.0.0.1:9042)")
 
     opt[String]('k', "keyspace").optional()
       .action((keyspace, config) => config.copy(keyspace = keyspace))
-      .text("...")
+      .valueName("<name>")
+      .text("The keyspace name of the Cassandra database (default: smackdev)")
 
     opt[String]('l',"loglevel").optional()
       .action((level, config) => config.copy(logLevel = level))
       .validate(level => if (Seq("error", "warn", "info", "debug", "off").contains(level.toLowerCase)) success else failure("undefined loglevel"))
-      .text("...")
+      .valueName("<level>")
+      .text("The log level used by standard output and (optionally) by sentry logger (default: info)")
 
     opt[String]("sentry-dns").optional()
       .action((dns, config) => config.copy(sentryDns = Some(dns)))
-      .text("...")
+      .valueName("<key>")
+      .text("If defined, every logs are sent to sentry servers and can be viewed on Sentry.io. The standard output remain unchanged")
 
-    note("...")
+    help("help").text("Display help")
+
+    note("Spark application to perform analysis on the model.")
   }
 
   private def checkAndGetConfig(args: Array[String]): AnalysisParams = argumentParser.parse(args, AnalysisParams()) match {
@@ -69,4 +75,3 @@ object AnalysisMain {
   case class AnalysisParams(cassandra: String = "", keyspace: String = "smackdev", logLevel: String = "INFO", sentryDns: Option[String] = None)
 
 }
-

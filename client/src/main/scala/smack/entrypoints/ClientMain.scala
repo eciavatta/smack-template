@@ -40,38 +40,48 @@ object ClientMain extends EntryPoint[ClientMain] {
 
     opt[Long]('c', "count").optional()
       .action((count, config) => config.copy(count = count))
-      .text("0 for infinite")
+      .valueName("<num>")
+      .text("The number of requests to do before stop (0 for infinite)")
 
     opt[Boolean]('d', "debug").optional()
       .action((debug, config) => config.copy(debug = Some(debug)))
-      .text("...")
+      .valueName("<bool>")
+      .text("True if debug should be enabled")
 
     opt[String]('h', "host").optional()
       .action((host, config) => config.copy(host = host))
-      .text("...")
+      .valueName("<addr>")
+      .text("The host of the service to test (default: localhost)")
 
     opt[String]('l',"loglevel").optional()
       .action((level, config) => config.copy(logLevel = level))
       .validate(level => if (Seq("error", "warning", "info", "debug", "off").contains(level.toLowerCase)) success else failure("undefined loglevel"))
-      .text("...")
+      .valueName("<level>")
+      .text("The log level used by standard output and (optionally) by sentry logger (default: info)")
 
     opt[Int]('r', "parallelism").optional()
       .action((parallelism, config) => config.copy(parallelism = parallelism))
-      .text("...")
+      .valueName("<num>")
+      .text("The number of actors to start (default: 2)")
 
     opt[Int]('p', "port").optional()
       .action((port, config) => config.copy(port = port))
-      .text("...")
+      .valueName("<port>")
+      .text(s"The port of the service to test (default: $defaultClientPort)")
 
     opt[Int]('n', "requests-per-second").optional()
       .action((requestsPerSecond, config) => config.copy(requestsPerSecond = requestsPerSecond))
-      .text("...")
+      .valueName("<num>")
+      .text(s"The number of requests per second that each actor should send (default: $defaultClientRequestsPerSecond)")
 
     opt[String]("sentry-dns").optional()
       .action((dns, config) => config.copy(sentryDns = Some(dns)))
-      .text("...")
+      .valueName("<key>")
+      .text("If defined, every logs are sent to sentry servers and can be viewed on Sentry.io. The standard output remain unchanged")
 
-    note("...")
+    help("help").text("Display help")
+
+    note("Tool that can be used to stress test the smack system.")
   }
 
 }
